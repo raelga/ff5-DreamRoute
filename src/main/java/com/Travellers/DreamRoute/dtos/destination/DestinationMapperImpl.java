@@ -18,7 +18,7 @@ public class DestinationMapperImpl implements DestinationMapper{
     }
 
     @Override
-    public entityToDto(Destination destination) {
+    public DestinationResponse entityToDto(Destination destination) {
         String username = (destination.getUser() != null) ? destination.getUser().getUsername() : null;
         return new DestinationResponse(
                 destination.getId(),
