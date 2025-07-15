@@ -1,4 +1,7 @@
 package com.Travellers.DreamRoute.repositories;
 
-public class DestinationRepository {
+import com.Travellers.DreamRoute.models.Destination;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DestinationRepository extends JpaRepository<Destination, Long> {
 }
