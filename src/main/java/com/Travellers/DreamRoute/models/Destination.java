@@ -22,7 +22,7 @@ public class Destination {
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     @ManyToOne
