@@ -19,6 +19,6 @@ public record DestinationRequest(
 
         @NotBlank(message = "Image is required")
         @Pattern(message = "Must be a valid URL", regexp = "^(http|https)://.*$")
-        String imageUrl
+        String image
 ) {
 }

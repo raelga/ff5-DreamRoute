@@ -23,7 +23,7 @@ public class Destination {
     private String description;
 
     @Column(name = "image_url", nullable = false)
-    private String imageUrl;
+    private String image;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

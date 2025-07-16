@@ -12,7 +12,7 @@ public class DestinationMapperImpl implements DestinationMapper{
                 .country(dto.country())
                 .city(dto.city())
                 .description(dto.description())
-                .imageUrl(dto.imageUrl())
+                .image(dto.image())
                 .user(user)
                 .build();
     }
@@ -25,7 +25,7 @@ public class DestinationMapperImpl implements DestinationMapper{
                 destination.getCountry(),
                 destination.getCity(),
                 destination.getDescription(),
-                destination.getImageUrl(),
+                destination.getImage(),
                 username
         );
     }

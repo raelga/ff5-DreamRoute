@@ -52,7 +52,7 @@ public class DestinationServiceTest {
                   destination1.getCountry(),
                   destination1.getCity(),
                   destination1.getDescription(),
-                  destination1.getImageUrl(),
+                  destination1.getImage(),
                   user.getUsername()
           )
         );
@@ -62,7 +62,7 @@ public class DestinationServiceTest {
                   destination2.getCountry(),
                   destination2.getCity(),
                   destination2.getDescription(),
-                  destination2.getImageUrl(),
+                  destination2.getImage(),
                   user.getUsername()
           )
         );
@@ -78,8 +78,8 @@ public class DestinationServiceTest {
         assertThat(result.get(1).city()).isEqualTo("Tokio");
         assertThat(result.get(0).description()).isEqualTo("La más hermosa y maravillosa ciudad del mundo");
         assertThat(result.get(1).description()).isEqualTo("La más hermosa y maravillosa ciudad del mundo después de Santa Marta");
-        assertThat(result.get(0).imageUrl()).isEqualTo("https://examplephoto-santamarta.jpg");
-        assertThat(result.get(1).imageUrl()).isEqualTo("https://examplephoto-tokio.jpg");
+        assertThat(result.get(0).image()).isEqualTo("https://examplephoto-santamarta.jpg");
+        assertThat(result.get(1).image()).isEqualTo("https://examplephoto-tokio.jpg");
         assertThat(result.get(0).username()).isEqualTo("usertest");
         assertThat(result.get(1).username()).isEqualTo("usertest");
     }
@@ -94,7 +94,7 @@ public class DestinationServiceTest {
                         destination.getCountry(),
                         destination.getCity(),
                         destination.getDescription(),
-                        destination.getImageUrl(),
+                        destination.getImage(),
                         user.getUsername()
                 )
         );
@@ -106,7 +106,7 @@ public class DestinationServiceTest {
         assertThat(result.country()).isEqualTo("Colombia");
         assertThat(result.city()).isEqualTo("Santa Marta");
         assertThat(result.description()).isEqualTo("La más hermosa y maravillosa ciudad del mundo");
-        assertThat(result.imageUrl()).isEqualTo("https://examplephoto-santamarta.jpg");
+        assertThat(result.image()).isEqualTo("https://examplephoto-santamarta.jpg");
         assertThat(result.username()).isEqualTo("usertest");
     }
 

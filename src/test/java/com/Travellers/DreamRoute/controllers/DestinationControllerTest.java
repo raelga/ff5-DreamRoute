@@ -73,7 +73,7 @@ public class DestinationControllerTest {
     void shouldGetAllDestinationsSuccessfully() throws Exception {
         given(destinationService.getAllDestinations()).willReturn(destinationResponses);
 
-        mockMvc.perform(get("/api/destinations").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/destinations").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -85,8 +85,8 @@ public class DestinationControllerTest {
                 .andExpect(jsonPath("$[1].city").value("Tokio"))
                 .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo"))
                 .andExpect(jsonPath("$[1].description").value("La más hermosa y maravillosa ciudad del mundo después de Santa Marta"))
-                .andExpect(jsonPath("$[0].imageUrl").value("https://examplephoto-santamarta.jpg"))
-                .andExpect(jsonPath("$[1].imageUrl").value("https://examplephoto-tokio.jpg"))
+                .andExpect(jsonPath("$[0].image").value("https://examplephoto-santamarta.jpg"))
+                .andExpect(jsonPath("$[1].image").value("https://examplephoto-tokio.jpg"))
                 .andExpect(jsonPath("$[0].username").value("May"))
                 .andExpect(jsonPath("$[1].username").value("May"));
     }
@@ -95,7 +95,7 @@ public class DestinationControllerTest {
     void shouldGetDestinationByIdSuccessfully() throws Exception {
         given(destinationService.getDestinationById(1L)).willReturn(destinationResponses.getFirst());
 
-        mockMvc.perform(get("/api/destinations/1").accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/destinations/1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(6))
                 .andExpect(jsonPath("$.id").exists())
@@ -103,7 +103,7 @@ public class DestinationControllerTest {
                 .andExpect(jsonPath("$.country").value("Colombia"))
                 .andExpect(jsonPath("$.city").value("Santa Marta"))
                 .andExpect(jsonPath("$.description").value("La más hermosa y maravillosa ciudad del mundo"))
-                .andExpect(jsonPath("$.imageUrl").value("https://examplephoto-santamarta.jpg"))
+                .andExpect(jsonPath("$.image").value("https://examplephoto-santamarta.jpg"))
                 .andExpect(jsonPath("$.username").value("May"));
     }
 }

@@ -5,7 +5,7 @@ public record DestinationResponse(
         String country,
         String city,
         String description,
-        String imageUrl,
+        String image,
         String username
 ) {
 }
