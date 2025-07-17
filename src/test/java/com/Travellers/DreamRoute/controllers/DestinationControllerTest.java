@@ -1,10 +1,10 @@
 package com.Travellers.DreamRoute.controllers;
 
+import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
 import com.Travellers.DreamRoute.services.DestinationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -15,8 +15,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.BDDMockito.willReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -156,5 +156,37 @@ public class DestinationControllerTest {
                 .andExpect(jsonPath("$[0].username").value("May"))
                 .andExpect(jsonPath("$[1].username").value("May"))
                 .andExpect(jsonPath("$[2].username").value("May"));
+    }
+
+    @Test
+    void shouldCreateDestinationSuccessfully() throws Exception{
+        DestinationRequest request = new DestinationRequest(
+                "Chile",
+                "Santiago",
+                "Una ciudad increíble",
+                "https://image.com/santiago.jpg"
+        );
+
+        DestinationResponse response = new DestinationResponse(
+                1L,
+                "Chile",
+                "Santiago",
+                "Una ciudad increíble",
+                "https://image.com/santiago.jpg",
+                "May"
+        );
+
+        given(destinationService.addDestination(request, "May")).willReturn(response);
+
+        mockMvc.perform(post("/destinations").param("username", "May").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.country").value("Chile"))
+                .andExpect(jsonPath("$.city").value("Santiago"))
+                .andExpect(jsonPath("$.description").value("Una ciudad increíble"))
+                .andExpect(jsonPath("$.image").value("https://image.com/santiago.jpg"))
+                .andExpect(jsonPath("$.username").value("May"));
     }
 }

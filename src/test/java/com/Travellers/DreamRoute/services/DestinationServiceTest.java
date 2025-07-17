@@ -1,6 +1,7 @@
 package com.Travellers.DreamRoute.services;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
+import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.models.Destination;
 import com.Travellers.DreamRoute.models.User;
@@ -11,11 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+
+import javax.swing.text.html.Option;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -178,5 +180,38 @@ public class DestinationServiceTest {
         assertThat(result1.get(0).username()).isEqualTo("May"); //era usertest
     }
 
+    @Test
+    void shouldAddDestinationSuccessfully() {
+        DestinationRequest request = new DestinationRequest("Chile", "Santiago", "una ciudad increible", "http://image.png");
+
+        Destination savedDestination = new Destination(
+                1L,
+                "Chile",
+                "Santiago",
+                "una ciudad increible",
+                "http://image.png",
+                user
+        );
+
+
+        given(userRepository.findByUsername("usertest")).willReturn(Optional.of(user));
+        given(destinationMapperImpl.dtoToEntity(request, user)).willReturn(savedDestination);
+        given(destinationRepository.save(savedDestination)).willReturn(savedDestination);
+        given(destinationMapperImpl.entityToDto(savedDestination)).willReturn(new DestinationResponse(1L,
+                "Chile",
+                "Santiago",
+                "una ciudad increible",
+                "http://image.png",
+                "usertest"));
+
+        DestinationResponse response = destinationService.addDestination(request, "usertest");
+
+        assertNotNull(response.id());
+        assertEquals("Chile", response.country());
+        assertEquals("Santiago", response.city());
+        assertEquals("una ciudad increible", response.description());
+        assertEquals("http://image.png", response.image());
+        assertEquals("usertest", response.username());
+    }
 
 }
