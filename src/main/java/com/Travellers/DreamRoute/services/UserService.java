@@ -10,6 +10,8 @@ import com.Travellers.DreamRoute.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -22,5 +24,12 @@ public class UserService {
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), username));
         return userMapperImpl.entityToDto(user);
+    }
+
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(user -> userMapperImpl.entityToDto(user))
+                .toList();
     }
 }
