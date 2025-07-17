@@ -115,7 +115,7 @@ public class DestinationControllerTest {
                 new DestinationResponse(1L,
                         "Colombia",
                         "Santa Marta",
-                        "La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes",
+                        "La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes.",
                         "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583230/santa-marta-img_vdhss8.jpg",
                         "May"),
                 new DestinationResponse(7L,
@@ -147,10 +147,10 @@ public class DestinationControllerTest {
                 .andExpect(jsonPath("$[0].city").value("Santa Marta"))
                 .andExpect(jsonPath("$[1].city").value("Sídney"))
                 .andExpect(jsonPath("$[2].city").value("Bariloche"))
-                .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo"))
+                .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes."))
                 .andExpect(jsonPath("$[1].description").value("Icono de la costa australiana con playas, ópera y naturaleza."))
                 .andExpect(jsonPath("$[2].description").value("Paisajes de montaña, lagos y chocolate en la Patagonia argentina."))
-                .andExpect(jsonPath("$[0].image").value("https://examplephoto-santamarta.jpg"))
+                .andExpect(jsonPath("$[0].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583230/santa-marta-img_vdhss8.jpg"))
                 .andExpect(jsonPath("$[1].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg"))
                 .andExpect(jsonPath("$[2].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg"))
                 .andExpect(jsonPath("$[0].username").value("May"))
