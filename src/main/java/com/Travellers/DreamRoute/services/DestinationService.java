@@ -1,21 +1,27 @@
 package com.Travellers.DreamRoute.services;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
-import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
+import com.Travellers.DreamRoute.dtos.user.UserMapperImpl;
 import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.Destination;
+import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.repositories.DestinationRepository;
+import com.Travellers.DreamRoute.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class DestinationService {
     private final DestinationRepository destinationRepository;
     private final DestinationMapperImpl destinationMapperImpl;
+    private final UserRepository userRepository; //insertedByM
+    private final UserMapperImpl userMapperImpl; //insertedByM
+
 
     public List<DestinationResponse> getAllDestinations() {
         List<Destination> destinations = destinationRepository.findAll();
@@ -28,6 +34,14 @@ public class DestinationService {
         Destination destination = destinationRepository.findById(id)
                 .orElseThrow(()-> new EntityNotFoundException(Destination.class.getSimpleName(), id));
         return destinationMapperImpl.entityToDto(destination);
+    }
+
+    public List<DestinationResponse> getDestinationsByUserId(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("User not found with id " + id));
+        List<Destination> destinations = destinationRepository.findAllByUser(user);
+        return destinations.stream()
+                .map(destination -> destinationMapperImpl.entityToDto(destination))
+                .toList();
     }
 
 }

@@ -13,6 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.BDDMockito.given;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -109,5 +113,70 @@ public class DestinationServiceTest {
         assertThat(result.image()).isEqualTo("https://examplephoto-santamarta.jpg");
         assertThat(result.username()).isEqualTo("usertest");
     }
+
+    @Test
+    void shouldReturnListOfDestinationResponseGivenAUserId() {
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setUsername("May");
+        user1.setEmail("princesitarockera@gmail.com");
+        user1.setPassword("May12345.");
+        User user4 = new User();
+        user4.setId(4L);
+        user4.setUsername("Nia");
+        user4.setPassword("Nia12345.");
+
+        Destination destination1a = new Destination(1L,  "Colombia", "Santa Marta", "La más hermosa y maravillosa ciudad del mundo", "https://examplephoto-santamarta.jpg", user1);
+        Destination destination2 = new Destination(7L,  "Australia", "Sídney", "Icono de la costa australiana con playas, ópera y naturaleza.", "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg", user1);
+        Destination destination3 = new Destination(10L,  "Argentina", "Bariloche", "Paisajes de montaña, lagos y chocolate en la Patagonia argentina.", "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg", user1);
+        Destination destination4 = new Destination(9L,  "Francia", "París", "La ciudad del amor con su icónica Torre Eiffel, museos y gastronomía.", "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583238/paris-img_jgcsje.jpg", user4);
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(user1));
+
+
+        given(destinationMapperImpl.entityToDto(destination1a)).willReturn(
+                new DestinationResponse(
+                        destination1a.getId(),
+                        destination1a.getCountry(),
+                        destination1a.getCity(),
+                        destination1a.getDescription(),
+                        destination1a.getImage(),
+                        user1.getUsername()
+                )
+        );
+        given(destinationMapperImpl.entityToDto(destination2)).willReturn(
+                new DestinationResponse(
+                        destination2.getId(),
+                        destination2.getCountry(),
+                        destination2.getCity(),
+                        destination2.getDescription(),
+                        destination2.getImage(),
+                        user1.getUsername()
+                )
+        );
+        given(destinationMapperImpl.entityToDto(destination3)).willReturn(
+                new DestinationResponse(
+                        destination3.getId(),
+                        destination3.getCountry(),
+                        destination3.getCity(),
+                        destination3.getDescription(),
+                        destination3.getImage(),
+                        user1.getUsername()
+                )
+        );
+
+
+        given(destinationRepository.findAllByUser(user1)).willReturn(List.of(destination1a, destination2, destination3));
+
+        List<DestinationResponse> result1 = destinationService.getDestinationsByUserId(1L);
+
+        assertThat(result1).hasSize(3);
+        assertThat(result1.get(0).country()).isEqualTo("Colombia");
+        assertThat(result1.get(0).city()).isEqualTo("Santa Marta");
+        assertThat(result1.get(0).description()).isEqualTo("La más hermosa y maravillosa ciudad del mundo");
+        assertThat(result1.get(0).image()).isEqualTo("https://examplephoto-santamarta.jpg");
+        assertThat(result1.get(0).username()).isEqualTo("May"); //era usertest
+    }
+
 
 }
