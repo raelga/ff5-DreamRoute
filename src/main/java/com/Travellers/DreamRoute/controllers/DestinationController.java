@@ -6,6 +6,7 @@ import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.services.DestinationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,7 +38,8 @@ public class DestinationController {
 
     @PostMapping
     public ResponseEntity<DestinationResponse> addDestination(@RequestBody @Valid DestinationRequest request, @RequestParam String username){
-        return ResponseEntity.ok(destinationService.addDestination(request, username));
+        DestinationResponse response = destinationService.addDestination(request, username);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 }
