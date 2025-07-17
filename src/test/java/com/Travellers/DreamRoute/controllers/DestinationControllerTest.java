@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.BDDMockito.willReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -105,5 +106,55 @@ public class DestinationControllerTest {
                 .andExpect(jsonPath("$.description").value("La más hermosa y maravillosa ciudad del mundo"))
                 .andExpect(jsonPath("$.image").value("https://examplephoto-santamarta.jpg"))
                 .andExpect(jsonPath("$.username").value("May"));
+    }
+
+    @Test
+    void shouldGetDestinationByUserIdSuccessfully() throws Exception {
+
+        List<DestinationResponse> user1DestinationResponses = List.of(
+                new DestinationResponse(1L,
+                        "Colombia",
+                        "Santa Marta",
+                        "La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes",
+                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583230/santa-marta-img_vdhss8.jpg",
+                        "May"),
+                new DestinationResponse(7L,
+                        "Australia",
+                        "Sídney", "Icono de la costa australiana con playas, ópera y naturaleza.",
+                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg",
+                        "May"),
+                new DestinationResponse(10L,
+                        "Argentina",
+                        "Bariloche",
+                        "Paisajes de montaña, lagos y chocolate en la Patagonia argentina.",
+                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg",
+                        "May")
+        );
+
+
+                given(destinationService.getDestinationsByUserId(1L)).willReturn(user1DestinationResponses);
+
+        mockMvc.perform(get("/destinations/user/{userId}", 1L).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[1].id").value(7))
+                .andExpect(jsonPath("$[2].id").value(10))
+                .andExpect(jsonPath("$[0].country").value("Colombia"))
+                .andExpect(jsonPath("$[1].country").value("Australia"))
+                .andExpect(jsonPath("$[2].country").value("Argentina"))
+                .andExpect(jsonPath("$[0].city").value("Santa Marta"))
+                .andExpect(jsonPath("$[1].city").value("Sídney"))
+                .andExpect(jsonPath("$[2].city").value("Bariloche"))
+                .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo"))
+                .andExpect(jsonPath("$[1].description").value("Icono de la costa australiana con playas, ópera y naturaleza."))
+                .andExpect(jsonPath("$[2].description").value("Paisajes de montaña, lagos y chocolate en la Patagonia argentina."))
+                .andExpect(jsonPath("$[0].image").value("https://examplephoto-santamarta.jpg"))
+                .andExpect(jsonPath("$[1].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg"))
+                .andExpect(jsonPath("$[2].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg"))
+                .andExpect(jsonPath("$[0].username").value("May"))
+                .andExpect(jsonPath("$[1].username").value("May"))
+                .andExpect(jsonPath("$[2].username").value("May"));
     }
 }

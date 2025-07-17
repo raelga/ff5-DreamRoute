@@ -29,4 +29,12 @@ public class DestinationController {
         DestinationResponse destination  = destinationService.getDestinationById(id);
         return ResponseEntity.ok(destination);
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<DestinationResponse>> getDestinationByUserId(@PathVariable Long userId){
+        List<DestinationResponse> destinations = destinationService.getDestinationsByUserId(userId);
+        return ResponseEntity.ok(destinations);
+    }
+
 }
+
