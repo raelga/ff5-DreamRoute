@@ -4,8 +4,11 @@ import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
 import com.Travellers.DreamRoute.services.DestinationService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,29 +16,32 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@Sql(scripts = "/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class DestinationControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private DestinationService destinationService;
-
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private DestinationService destinationService;
 
     private List<DestinationResponse> destinationResponses;
 
@@ -70,11 +76,40 @@ public class DestinationControllerTest {
         destinationResponses.add(destination2);
     }
 
+    private String asJsonString(Object object){
+        try{
+            return objectMapper.writeValueAsString(object);
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    private ResultActions performGetRequest(String url) throws Exception{
+        return mockMvc.perform(get(url)
+                .accept(MediaType.APPLICATION_JSON));
+    }
+
+    @Nested
+    @DisplayName("Get /destinations")
+    class getAllDestinationTest {
+
+        @Test
+        @DisplayName("GET /destinations should return all destinations")
+        void getAllDestinations_returnsListOfDestinations() throws Exception {
+            performGetRequest("/destinations")
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", hasSize(10)))
+                    .andExpect(jsonPath("$.country", is("Colombia")));
+        }
+    }
+
+
     @Test
     void shouldGetAllDestinationsSuccessfully() throws Exception {
         given(destinationService.getAllDestinations()).willReturn(destinationResponses);
 
-        mockMvc.perform(get("/destinations").accept(MediaType.APPLICATION_JSON))
+        performGetRequest("/destinations")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
