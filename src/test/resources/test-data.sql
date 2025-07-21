@@ -1,4 +1,7 @@
-DELETE FROM roles, users, users_roles, destinations;
+DELETE FROM users_roles;
+DELETE FROM destinations;
+DELETE FROM users;
+DELETE FROM roles;
 
 INSERT INTO roles(id, role_name) VALUES
 (1, 'ROLE_USER'),
