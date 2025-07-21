@@ -2,6 +2,7 @@ package com.Travellers.DreamRoute.services;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
 import com.Travellers.DreamRoute.dtos.user.UserMapperImpl;
+import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
 import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.User;
@@ -31,5 +32,14 @@ public class UserService {
         return users.stream()
                 .map(user -> userMapperImpl.entityToDto(user))
                 .toList();
+    }
+    public UserResponse updateUser(String username, UserRequest userRequest){
+        User user = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), username));
+        user.setUsername(userRequest.username());
+        user.setEmail(userRequest.email());
+        user.setPassword(userRequest.password());
+
+        return userMapperImpl.entityToDto(userRepository.save(user));
     }
 }
