@@ -194,7 +194,7 @@ public class DestinationServiceTest {
         );
 
 
-        given(userRepository.findByUsername("usertest")).willReturn(Optional.of(user));
+        given(userRepository.findByUsernameIgnoreCase("usertest")).willReturn(Optional.of(user));
         given(destinationMapperImpl.dtoToEntity(request, user)).willReturn(savedDestination);
         given(destinationRepository.save(savedDestination)).willReturn(savedDestination);
         given(destinationMapperImpl.entityToDto(savedDestination)).willReturn(new DestinationResponse(1L,

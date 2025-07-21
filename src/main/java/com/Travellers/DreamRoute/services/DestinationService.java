@@ -20,9 +20,7 @@ import java.util.NoSuchElementException;
 public class DestinationService {
     private final DestinationRepository destinationRepository;
     private final DestinationMapperImpl destinationMapperImpl;
-    private final UserRepository userRepository; //insertedByM
-    private final UserMapperImpl userMapperImpl; //insertedByM
-
+    private final UserRepository userRepository;
 
     public List<DestinationResponse> getAllDestinations() {
         List<Destination> destinations = destinationRepository.findAll();
@@ -46,7 +44,7 @@ public class DestinationService {
     }
 
     public DestinationResponse addDestination(DestinationRequest destinationRequest, String username){
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new NoSuchElementException("user not found"));
         Destination destination = destinationMapperImpl.dtoToEntity(destinationRequest, user);
 
