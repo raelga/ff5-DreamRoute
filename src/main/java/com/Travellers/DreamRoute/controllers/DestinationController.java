@@ -42,5 +42,10 @@ public class DestinationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteDestination(@PathVariable Long id) {
+        destinationService.deleteDestination(id);
+        String message = "Destination with id " + id + " has been deleted";
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
 }
-
