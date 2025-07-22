@@ -52,4 +52,10 @@ public class DestinationService {
         return destinationMapperImpl.entityToDto(destination);
     }
 
+    public void deleteDestination(Long id) {
+        Destination destinationToDelete = destinationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
+        destinationRepository.delete(destinationToDelete);
+    }
+
 }
