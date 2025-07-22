@@ -26,11 +26,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/users/all").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/destinations").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/destinations").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/destinations/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/destinations/user/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/destinations").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/destinations?username={username}").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(manager-> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
