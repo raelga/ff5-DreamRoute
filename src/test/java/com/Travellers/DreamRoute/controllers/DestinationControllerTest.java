@@ -20,8 +20,8 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.mockito.BDDMockito.given;
@@ -40,40 +40,6 @@ public class DestinationControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
-    private List<DestinationResponse> destinationResponses;
-
-    @BeforeEach
-    void setUp(){
-        UserResponse user = new UserResponse(
-                1L,
-                "May",
-                "princesitarockera@gmail.com",
-                "May12345.",
-                List.of("Santa Marta, Tokio"),
-                List.of("ROLE_USER, ROLE_ADMIN"));
-
-        destinationResponses = new ArrayList<>();
-
-        DestinationResponse destination1 = new DestinationResponse(
-                1L,
-                "Colombia",
-                "Santa Marta",
-                "La más hermosa y maravillosa ciudad del mundo",
-                "https://examplephoto-santamarta.jpg",
-                user.username());
-        DestinationResponse destination2 = new DestinationResponse(
-                2L,
-                "Japón",
-                "Tokio",
-                "La más hermosa y maravillosa ciudad del mundo después de Santa Marta",
-                "https://examplephoto-tokio.jpg",
-                user.username());
-
-        destinationResponses.add(destination1);
-        destinationResponses.add(destination2);
-    }
-
     private String asJsonString(Object object){
         try{
             return objectMapper.writeValueAsString(object);
@@ -84,6 +50,7 @@ public class DestinationControllerTest {
 
     private ResultActions performGetRequest(String url) throws Exception{
         return mockMvc.perform(get(url)
+                .with(user("testuser").roles("USER"))
                 .accept(MediaType.APPLICATION_JSON));
     }
 
@@ -92,134 +59,87 @@ public class DestinationControllerTest {
     class getAllDestinationTest {
 
         @Test
-        @DisplayName("GET /destinations should return all destinations")
+        @DisplayName("should return all destinations with status 200 OK and correct content type")
         void getAllDestinations_returnsListOfDestinations() throws Exception {
             performGetRequest("/destinations")
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(10)))
-                    .andExpect(jsonPath("$[0].country", is("Colombia")));
+                    .andExpect(jsonPath("$[0].country", is("Colombia")))
+                    .andExpect(jsonPath("$[0].city", is("Santa Marta")))
+                    .andExpect(jsonPath("$[9].country", is("Argentina")));
+        }
+
+        @Test
+        @DisplayName("Should return destinations with expected structure and data types")
+        void getAllDestinations_returnsCorrectStructureAndTypes() throws Exception {
+            performGetRequest("/destinations")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].id").isNumber())
+                    .andExpect(jsonPath("$[0].country").isString())
+                    .andExpect(jsonPath("$[0].city").isString())
+                    .andExpect(jsonPath("$[0].description").isString())
+                    .andExpect(jsonPath("$[0].image").isString())
+                    .andExpect(jsonPath("$[0].username").isString());
         }
     }
 
+    @Nested
+    @DisplayName("GET /destinations/{id}")
+    class GetDestinationByIdTests {
+        private final Long EXISTING_DESTINATION_ID = 1L;
+        private final Long NON_EXISTING_DESTINATION_ID = 99L;
 
-//    @Test
-//    void shouldGetAllDestinationsSuccessfully() throws Exception {
-//        given(destinationService.getAllDestinations()).willReturn(destinationResponses);
-//
-//        performGetRequest("/destinations")
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$").isArray())
-//                .andExpect(jsonPath("$.length()").value(2))
-//                .andExpect(jsonPath("$[0].id").value(1))
-//                .andExpect(jsonPath("$[1].id").value(2))
-//                .andExpect(jsonPath("$[0].country").value("Colombia"))
-//                .andExpect(jsonPath("$[1].country").value("Japón"))
-//                .andExpect(jsonPath("$[0].city").value("Santa Marta"))
-//                .andExpect(jsonPath("$[1].city").value("Tokio"))
-//                .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo"))
-//                .andExpect(jsonPath("$[1].description").value("La más hermosa y maravillosa ciudad del mundo después de Santa Marta"))
-//                .andExpect(jsonPath("$[0].image").value("https://examplephoto-santamarta.jpg"))
-//                .andExpect(jsonPath("$[1].image").value("https://examplephoto-tokio.jpg"))
-//                .andExpect(jsonPath("$[0].username").value("May"))
-//                .andExpect(jsonPath("$[1].username").value("May"));
-//    }
-//
-//    @Test
-//    void shouldGetDestinationByIdSuccessfully() throws Exception {
-//        given(destinationService.getDestinationById(1L)).willReturn(destinationResponses.getFirst());
-//
-//        mockMvc.perform(get("/destinations/1").accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.length()").value(6))
-//                .andExpect(jsonPath("$.id").exists())
-//                .andExpect(jsonPath("$.id").value(1))
-//                .andExpect(jsonPath("$.country").value("Colombia"))
-//                .andExpect(jsonPath("$.city").value("Santa Marta"))
-//                .andExpect(jsonPath("$.description").value("La más hermosa y maravillosa ciudad del mundo"))
-//                .andExpect(jsonPath("$.image").value("https://examplephoto-santamarta.jpg"))
-//                .andExpect(jsonPath("$.username").value("May"));
-//    }
-//
-//    @Test
-//    void shouldGetDestinationByUserIdSuccessfully() throws Exception {
-//
-//        List<DestinationResponse> user1DestinationResponses = List.of(
-//                new DestinationResponse(1L,
-//                        "Colombia",
-//                        "Santa Marta",
-//                        "La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes.",
-//                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583230/santa-marta-img_vdhss8.jpg",
-//                        "May"),
-//                new DestinationResponse(7L,
-//                        "Australia",
-//                        "Sídney", "Icono de la costa australiana con playas, ópera y naturaleza.",
-//                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg",
-//                        "May"),
-//                new DestinationResponse(10L,
-//                        "Argentina",
-//                        "Bariloche",
-//                        "Paisajes de montaña, lagos y chocolate en la Patagonia argentina.",
-//                        "https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg",
-//                        "May")
-//        );
-//
-//
-//                given(destinationService.getDestinationsByUserId(1L)).willReturn(user1DestinationResponses);
-//
-//        mockMvc.perform(get("/destinations/user/{userId}", 1L).accept(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$").isArray())
-//                .andExpect(jsonPath("$.length()").value(3))
-//                .andExpect(jsonPath("$[0].id").value(1))
-//                .andExpect(jsonPath("$[1].id").value(7))
-//                .andExpect(jsonPath("$[2].id").value(10))
-//                .andExpect(jsonPath("$[0].country").value("Colombia"))
-//                .andExpect(jsonPath("$[1].country").value("Australia"))
-//                .andExpect(jsonPath("$[2].country").value("Argentina"))
-//                .andExpect(jsonPath("$[0].city").value("Santa Marta"))
-//                .andExpect(jsonPath("$[1].city").value("Sídney"))
-//                .andExpect(jsonPath("$[2].city").value("Bariloche"))
-//                .andExpect(jsonPath("$[0].description").value("La más hermosa y maravillosa ciudad del mundo, aunque calurosa llena de playas refrescantes."))
-//                .andExpect(jsonPath("$[1].description").value("Icono de la costa australiana con playas, ópera y naturaleza."))
-//                .andExpect(jsonPath("$[2].description").value("Paisajes de montaña, lagos y chocolate en la Patagonia argentina."))
-//                .andExpect(jsonPath("$[0].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583230/santa-marta-img_vdhss8.jpg"))
-//                .andExpect(jsonPath("$[1].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583236/sydney-img_hgjycy.jpg"))
-//                .andExpect(jsonPath("$[2].image").value("https://res.cloudinary.com/dwc2jpfbw/image/upload/v1752583239/bariloche-img_jsqzbg.jpg"))
-//                .andExpect(jsonPath("$[0].username").value("May"))
-//                .andExpect(jsonPath("$[1].username").value("May"))
-//                .andExpect(jsonPath("$[2].username").value("May"));
-//    }
-//
-//    @Test
-//    void shouldCreateDestinationSuccessfully() throws Exception{
-//        DestinationRequest request = new DestinationRequest(
-//                "Chile",
-//                "Santiago",
-//                "Una ciudad increíble",
-//                "https://image.com/santiago.jpg"
-//        );
-//
-//        DestinationResponse response = new DestinationResponse(
-//                1L,
-//                "Chile",
-//                "Santiago",
-//                "Una ciudad increíble",
-//                "https://image.com/santiago.jpg",
-//                "May"
-//        );
-//
-//        given(destinationService.addDestination(request, "May")).willReturn(response);
-//
-//        mockMvc.perform(post("/destinations").param("username", "May").contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(request)))
-//
-//                .andExpect(status().isCreated())
-//                .andExpect(jsonPath("$.id").value(1))
-//                .andExpect(jsonPath("$.country").value("Chile"))
-//                .andExpect(jsonPath("$.city").value("Santiago"))
-//                .andExpect(jsonPath("$.description").value("Una ciudad increíble"))
-//                .andExpect(jsonPath("$.image").value("https://image.com/santiago.jpg"))
-//                .andExpect(jsonPath("$.username").value("May"));
-//    }
+        @Test
+        @DisplayName("Should return the destination by ID with status 200 OK")
+        void getDestinationById_returnsDestination_whenIdExists() throws Exception {
+            performGetRequest("/destinations/" + EXISTING_DESTINATION_ID)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id", is(EXISTING_DESTINATION_ID.intValue())))
+                    .andExpect(jsonPath("$.country", is("Colombia")))
+                    .andExpect(jsonPath("$.city", is("Santa Marta")));
+        }
+
+        @Test
+        @DisplayName("Should return 404 Not Found when destination ID does not exist")
+        void getDestinationById_returnsNotFound_whenIdDoesNotExist() throws Exception {
+            performGetRequest("/destinations/" + NON_EXISTING_DESTINATION_ID)
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /destinations/user/{userId}")
+    class GetDestinationsByUserIdTests {
+        private final Long USER_WITH_DESTINATION_ID = 1L;
+        private final Long USER_WITHOUT_DESTINATION_ID = 6L;
+        private final Long NON_EXISTENT_USER_ID = 99L;
+
+        @Test
+        @DisplayName("Should return a list of destinations for an existing user with destinations")
+        void getDestinationsByUserId_returnsDestinations_whenUserExistsAndHasDestinations() throws Exception {
+            performGetRequest("/destinations/user/" + USER_WITH_DESTINATION_ID)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", hasSize(3)))
+                    .andExpect(jsonPath("$.[0].username", is("May")));
+        }
+
+        @Test
+        @DisplayName("Should return an empty list when user exists but has no destinations")
+        void getDestinationsByUserId_returnsEmptyList_whenUserExistsButNoDestinations() throws Exception {
+            performGetRequest("/destinations/user/" + USER_WITHOUT_DESTINATION_ID)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", empty()));
+        }
+
+        @Test
+        @DisplayName("Should return 404 Not Found when user ID does not exist")
+        void getDestinationsByUserId_returnsNotFound_whenUserDoesNotExist() throws Exception {
+            performGetRequest("/destinations/user/" + NON_EXISTENT_USER_ID)
+                    .andExpect(status().isNotFound());
+        }
+    }
 }

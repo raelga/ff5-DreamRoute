@@ -12,7 +12,8 @@ INSERT INTO users(id, username, email, password) VALUES
 (2, 'Deb', 'deb@example.com', 'Deb12345.'),
 (3, 'Mary', 'mary@example.com', 'Mary12345.'),
 (4, 'Nia', 'nia@example.com', 'Nia12345.'),
-(5, 'Sofi', 'sofi@example.com', 'Sofi12345.');
+(5, 'Sofi', 'sofi@example.com', 'Sofi12345.'),
+(6, 'Violeta', 'vio@example.com', 'Vio12345.');
 
 INSERT INTO users_roles(user_id, role_id) VALUES
 (1, 2),
