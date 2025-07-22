@@ -52,10 +52,23 @@ public class DestinationService {
         return destinationMapperImpl.entityToDto(destination);
     }
 
+    public DestinationResponse updateDestination(Long id, DestinationRequest destinationRequest) {
+        Destination destinationToUpdate = destinationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
+
+        destinationToUpdate.setCountry(destinationRequest.country());
+        destinationToUpdate.setCity(destinationRequest.city());
+        destinationToUpdate.setDescription(destinationRequest.description());
+        destinationToUpdate.setImage(destinationRequest.image());
+
+        Destination updatedDestination = destinationRepository.save(destinationToUpdate);
+
+        return destinationMapperImpl.entityToDto(updatedDestination);
+    }
+
     public void deleteDestination(Long id) {
         Destination destinationToDelete = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
         destinationRepository.delete(destinationToDelete);
     }
-
 }
