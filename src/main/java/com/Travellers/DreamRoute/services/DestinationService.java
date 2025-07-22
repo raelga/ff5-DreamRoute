@@ -3,12 +3,13 @@ package com.Travellers.DreamRoute.services;
 import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
 import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
-import com.Travellers.DreamRoute.dtos.user.UserMapperImpl;
 import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.Destination;
 import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.repositories.DestinationRepository;
 import com.Travellers.DreamRoute.repositories.UserRepository;
+import com.Travellers.DreamRoute.security.UserDetail;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,12 @@ public class DestinationService {
     private final DestinationRepository destinationRepository;
     private final DestinationMapperImpl destinationMapperImpl;
     private final UserRepository userRepository;
+
+    private void validateUser(UserDetail userDetails) {
+        if (userDetails == null || userDetails.getUsername() == null) {
+            throw new IllegalArgumentException("User information is missing or invalid");
+        }
+    }
 
     public List<DestinationResponse> getAllDestinations() {
         List<Destination> destinations = destinationRepository.findAll();
@@ -43,12 +50,16 @@ public class DestinationService {
                 .toList();
     }
 
-    public DestinationResponse addDestination(DestinationRequest destinationRequest, String username){
-        User user = userRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new NoSuchElementException("user not found"));
-        Destination destination = destinationMapperImpl.dtoToEntity(destinationRequest, user);
+    @Transactional
+    public DestinationResponse addDestination(DestinationRequest request, UserDetail userDetails) {
+        validateUser(userDetails);
 
+        User user = userRepository.findByUsernameIgnoreCase(userDetails.getUsername())
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+
+        Destination destination = destinationMapperImpl.dtoToEntity(request, user);
         destinationRepository.save(destination);
+
         return destinationMapperImpl.entityToDto(destination);
     }
 
