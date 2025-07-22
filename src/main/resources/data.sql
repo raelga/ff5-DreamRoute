@@ -3,8 +3,8 @@ INSERT INTO roles(id, role_name) VALUES
 (2, 'ROLE_ADMIN');
 
 INSERT INTO users(id, username, email, password) VALUES
-(1, 'May', 'princesitarockera@gmail.com', 'May12345.'),
-(2, 'Deb', 'deb@example.com', 'Deb12345.'),
+(1, 'May', 'princesitarockera@gmail.com', '$2a$12$ujrtJeyCVy992nYx8SJ8i.b0lLycVo9D5beF8/OOWj.pt1uSFpzHq'),
+(2, 'Deb', 'deb@example.com', '$2a$12$mr15uTxw.QQUkbeEEO850ekrpIbTUnbuLJv9id/bnxGm4b1cHPuSO'),
 (3, 'Mary', 'mary@example.com', 'Mary12345.'),
 (4, 'Nia', 'nia@example.com', 'Nia12345.'),
 (5, 'Sofi', 'sofi@example.com', 'Sofi12345.');
