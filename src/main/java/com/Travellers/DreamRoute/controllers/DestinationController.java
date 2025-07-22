@@ -42,6 +42,13 @@ public class DestinationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<DestinationResponse> updateDestination(
+            @PathVariable Long id, @RequestBody @Valid DestinationRequest request) {
+        DestinationResponse updatedDestination = destinationService.updateDestination(id, request);
+        return ResponseEntity.ok(updatedDestination);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteDestination(@PathVariable Long id) {
         destinationService.deleteDestination(id);
