@@ -77,9 +77,10 @@ public class DestinationService {
         return destinationMapperImpl.entityToDto(updatedDestination);
     }
 
-    public void deleteDestination(Long id) {
+    public String deleteDestination(Long id) {
         Destination destinationToDelete = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
         destinationRepository.delete(destinationToDelete);
+        return "Destination with id " + id + " has been deleted";
     }
 }
