@@ -89,5 +89,7 @@ public class UserControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.message").value("User not found with username " + usernameDoesNotExist));
         }
+
+
     }
 }
