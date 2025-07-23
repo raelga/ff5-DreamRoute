@@ -5,9 +5,9 @@ INSERT INTO roles(id, role_name) VALUES
 INSERT INTO users(id, username, email, password) VALUES
 (1, 'May', 'princesitarockera@gmail.com', '$2a$12$ujrtJeyCVy992nYx8SJ8i.b0lLycVo9D5beF8/OOWj.pt1uSFpzHq'),
 (2, 'Deb', 'deb@example.com', '$2a$12$mr15uTxw.QQUkbeEEO850ekrpIbTUnbuLJv9id/bnxGm4b1cHPuSO'),
-(3, 'Mary', 'mary@example.com', 'Mary12345.'),
-(4, 'Nia', 'nia@example.com', 'Nia12345.'),
-(5, 'Sofi', 'sofi@example.com', 'Sofi12345.');
+(3, 'Mary', 'mary@example.com', '$2a$12$cQRHt31sbvaFOsYKMVwZy.C9mhIOCRkfcbJWg4.H/HJnlxQsU7OiC'),
+(4, 'Nia', 'nia@example.com', '$2a$12$nvI3IHRGP7JorOje.D2HMub/Q/32MIsdvWtpaXgmvhy58W1Jv7AJ2'),
+(5, 'Sofi', 'sofi@example.com', '$2a$12$64jtN/0uZlsqZLFof0iWOONHaJoOc0x08QuMzmP8hYwIEYPRWZtAm');
 
 INSERT INTO users_roles(user_id, role_id) VALUES
 (1, 2),
