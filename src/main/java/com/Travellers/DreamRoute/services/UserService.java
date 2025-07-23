@@ -40,12 +40,12 @@ public class UserService implements UserDetailsService {
                 .map(user -> userMapperImpl.entityToDto(user))
                 .toList();
     }
-    public UserResponse updateUser(String username, UserRequest userRequest){
-        User user = userRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), username));
+    public UserResponse updateUser(Long id, UserRequest userRequest){
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), id));
         user.setUsername(userRequest.username());
         user.setEmail(userRequest.email());
-        user.setPassword(userRequest.password());
+        user.setPassword(passwordEncoder.encode(userRequest.password()));
 
         return userMapperImpl.entityToDto(userRepository.save(user));
     }

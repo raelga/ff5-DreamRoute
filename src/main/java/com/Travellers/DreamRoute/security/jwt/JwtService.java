@@ -22,6 +22,7 @@ public class JwtService {
     private String buildToken(UserDetail userDetail, long jwtExpiration) {
         return Jwts
                 .builder()
+                .claim("id", userDetail.getId())
                 .claim("role", userDetail.getAuthorities().toString())
                 .subject(userDetail.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
