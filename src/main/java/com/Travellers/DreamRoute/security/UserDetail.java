@@ -33,4 +33,6 @@ public class UserDetail implements UserDetails {
         return user.getUsername();
     }
 
+    public Long getId() {return user.getId();}
+
 }
