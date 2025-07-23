@@ -1,10 +1,9 @@
 package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
-import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
-import com.Travellers.DreamRoute.dtos.user.UserResponse;
-import com.Travellers.DreamRoute.services.DestinationService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.Travellers.DreamRoute.models.Role;
+import com.Travellers.DreamRoute.models.User;
+import com.Travellers.DreamRoute.security.UserDetail;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,21 +13,19 @@ import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,6 +48,21 @@ public class DestinationControllerTest {
     private ResultActions performGetRequest(String url) throws Exception{
         return mockMvc.perform(get(url)
                 .with(user("testuser").roles("USER"))
+                .accept(MediaType.APPLICATION_JSON));
+    }
+
+    private ResultActions performPostRequest(String url, Object body, UserDetail userDetail) throws Exception {
+        return mockMvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(body))
+                .with(user(userDetail))
+                .accept(MediaType.APPLICATION_JSON));
+    }
+
+    private ResultActions performPostRequestUnauthenticated(String url, Object body) throws Exception {
+        return mockMvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(body))
                 .accept(MediaType.APPLICATION_JSON));
     }
 
@@ -139,6 +151,121 @@ public class DestinationControllerTest {
         @DisplayName("Should return 404 Not Found when user ID does not exist")
         void getDestinationsByUserId_returnsNotFound_whenUserDoesNotExist() throws Exception {
             performGetRequest("/destinations/user/" + NON_EXISTENT_USER_ID)
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /destinations")
+    class AddDestinationTests{
+
+        private static final String ROLE_USER_NAME = "ROLE_USER";
+        private static final String ROLE_ADMIN_NAME = "ROLE_ADMIN";
+
+        private User userEntityUserRole;
+        private UserDetail userDetailUserRole;
+
+        private User userEntityAdminRole;
+        private UserDetail userDetailAdminRole;
+
+        private User userEntityNonExistent;
+        private UserDetail userDetailNonExistent;
+
+        private DestinationRequest validDestinationRequest;
+
+        private final String EXISTING_USERNAME_USER = "Deb";
+        private final String EXISTING_USERNAME_ADMIN = "May";
+        private final String NON_EXISTENT_USERNAME = "usertest";
+
+        private Role createRole(String roleName) {
+            Role role = new Role();
+            role.setRoleName(roleName);
+            return role;
+        }
+
+        @BeforeEach
+        void setup(){
+            validDestinationRequest = new DestinationRequest(
+                    "Francia",
+                    "Paris",
+                    "La ciudad del amor.",
+                    "https://example.com/paris.jpg"
+            );
+
+            Role userRole = createRole(ROLE_USER_NAME);
+
+            userEntityUserRole = User.builder()
+                    .id(2L)
+                    .username(EXISTING_USERNAME_USER)
+                    .password("any_encoded_password")
+                    .roles(Collections.singletonList(userRole))
+                    .build();
+            userDetailUserRole = new UserDetail(userEntityUserRole);
+
+            Role adminRole = createRole(ROLE_ADMIN_NAME);
+
+            userEntityAdminRole = User.builder()
+                    .id(1L)
+                    .username(EXISTING_USERNAME_ADMIN)
+                    .password("any_encoded_password")
+                    .roles(Collections.singletonList(adminRole))
+                    .build();
+            userDetailAdminRole = new UserDetail(userEntityAdminRole);
+
+            Role nonExistentUserRole = createRole(ROLE_USER_NAME);
+
+            userEntityNonExistent = User.builder()
+                    .id(999L)
+                    .username(NON_EXISTENT_USERNAME)
+                    .password("any_encoded_password")
+                    .roles(Collections.singletonList(nonExistentUserRole))
+                    .build();
+            userDetailNonExistent = new UserDetail(userEntityNonExistent);
+        }
+
+        @Test
+        @DisplayName("Should create a new destination when authenticated as USER with valid data (201 Created)")
+        void addDestination_createsNewDestination_whenUserAuthenticatedAndValid() throws Exception {
+            performPostRequest("/destinations", validDestinationRequest, userDetailUserRole)
+                    .andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").isNumber())
+                    .andExpect(jsonPath("$.country", is("Francia")))
+                    .andExpect(jsonPath("$.city", is("Paris")))
+                    .andExpect(jsonPath("$.username", is(EXISTING_USERNAME_USER)));
+
+            mockMvc.perform(get("/destinations")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(11)));
+        }
+
+        @Test
+        @DisplayName("Should return 403 Forbidden when authenticated as ADMIN (if only USER has permission)")
+        void addDestination_returnsForbidden_whenAuthenticatedAsAdmin() throws Exception {
+            performPostRequest("/destinations", validDestinationRequest, userDetailAdminRole)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request when request body is invalid (e.g., empty city)")
+        void addDestination_returnsBadRequest_whenInvalidData() throws Exception{
+            DestinationRequest invalidRequest = new DestinationRequest(
+                    "Alemania",
+                    "",
+                    "Descripción válida.",
+                    "https://example.com/berlin.jpg"
+            );
+
+            performPostRequest("/destinations", invalidRequest, userDetailUserRole)
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.details.city", is("City is required")));
+        }
+
+        @Test
+        @DisplayName("Should return 404 Not Found when authenticated user does not exist in DB")
+        void addDestination_returnsNotFound_whenAuthenticatedUserDoesNotExistInDB() throws Exception{
+            performPostRequest("/destinations", validDestinationRequest, userDetailNonExistent)
                     .andExpect(status().isNotFound());
         }
     }
