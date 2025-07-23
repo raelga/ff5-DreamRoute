@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +35,9 @@ public class UserServiceTest {
     UserService userService;
 
    User testUser;
+   User testUser2;
    UserResponse testUserResponse;
+   UserResponse testUserResponse2;
 
    @BeforeEach
     void setUp(){
@@ -45,6 +48,13 @@ public class UserServiceTest {
                .password("testDeamRoute1!")
                .build();
 
+       testUser2 = User.builder()
+               .id(2L)
+               .username("testuser2")
+               .email("test2@dreamroute.com")
+               .password("testDreamRoute2!")
+               .build();
+
        testUserResponse = new UserResponse(
                1L,
                "testuser",
@@ -52,6 +62,17 @@ public class UserServiceTest {
                "testDreamRoute1!", //consider removing password from DTO
                List.of(), //add mock destinations?
                List.of("ROLE_USER")
+       );
+
+       testUserResponse2 = new UserResponse(
+               2L,
+               "testuser2",
+               "test2@dreamroute.com",
+               "testDreamRoute2!", //consider removing password from DTO
+               List.of(), //add mock destinations?
+               List.of("ROLE_ADMIN")
+
+
        );
    }
 
@@ -80,5 +101,38 @@ public class UserServiceTest {
        });
        assertThat(exception.getMessage()).contains("User not found with username testuserdoesnotexist");
    }
+
+    @Test
+    @DisplayName("should return UserResponse for all users")
+    void shouldReturnUserResponseForAllUsers() {
+        List<User> allUsers = List.of(testUser, testUser2);
+        given(userRepository.findAll()).willReturn(allUsers);
+        given(userMapperImpl.entityToDto(testUser)).willReturn(testUserResponse);
+        given(userMapperImpl.entityToDto(testUser2)).willReturn(testUserResponse2);
+
+        List<UserResponse> result = userService.getAllUsers();
+
+        assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0).id()).isEqualTo(testUserResponse.id());
+        assertThat(result.get(1).id()).isEqualTo(testUserResponse2.id());
+        assertThat(result.get(0).username()).isEqualTo(testUserResponse.username());
+        assertThat(result.get(1).username()).isEqualTo(testUserResponse2.username());
+        assertThat(result.get(0).email()).isEqualTo(testUserResponse.email());
+        assertThat(result.get(1).email()).isEqualTo(testUserResponse2.email());
+        assertThat(result.get(0).roles()).isEqualTo(testUserResponse.roles());
+        assertThat(result.get(1).roles()).isEqualTo(testUserResponse2.roles());
+    }
+
+    @Test
+    @DisplayName("should throw EntityNotFoundException when no users exist")
+    void shouldThrowEntityNotFoundExceptionWhenNoUsersExist(){
+        given(userRepository.findAll()).willReturn(Collections.emptyList());
+
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+            userService.getAllUsers();
+        });
+        assertThat(exception.getMessage()).contains("No users exist");
+    }
 
 }
