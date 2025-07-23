@@ -3,11 +3,14 @@ package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationRequest;
 import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
+import com.Travellers.DreamRoute.security.UserDetail;
 import com.Travellers.DreamRoute.services.DestinationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,8 +40,9 @@ public class DestinationController {
     }
 
     @PostMapping
-    public ResponseEntity<DestinationResponse> addDestination(@RequestBody @Valid DestinationRequest request, @RequestParam String username){
-        DestinationResponse response = destinationService.addDestination(request, username);
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<DestinationResponse> addDestination(@RequestBody @Valid DestinationRequest request, @AuthenticationPrincipal UserDetail userDetail){
+        DestinationResponse response = destinationService.addDestination(request, userDetail);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
