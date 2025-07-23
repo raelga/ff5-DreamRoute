@@ -1,6 +1,7 @@
 package com.Travellers.DreamRoute.services;
 
 import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
+import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.dtos.user.UserMapperImpl;
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -50,10 +52,17 @@ public class UserService implements UserDetailsService {
         return userMapperImpl.entityToDto(userRepository.save(user));
     }
 
+    public void deleteUser(Long id) {
+        User userToDelete = userRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), id));
+        userRepository.delete(userToDelete);
+    }
+
     @Override
     public UserDetail loadUserByUsername(String username) throws EntityNotFoundException {
         User user =  userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), username));
         return new UserDetail(user);
     }
+
 }
