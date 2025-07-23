@@ -59,8 +59,8 @@ public class UserServiceTest {
                1L,
                "testuser",
                "test@dreamroute.com",
-               "testDreamRoute1!", //consider removing password from DTO
-               List.of(), //add mock destinations?
+               "testDreamRoute1!",
+               List.of(),
                List.of("ROLE_USER")
        );
 
@@ -68,8 +68,8 @@ public class UserServiceTest {
                2L,
                "testuser2",
                "test2@dreamroute.com",
-               "testDreamRoute2!", //consider removing password from DTO
-               List.of(), //add mock destinations?
+               "testDreamRoute2!",
+               List.of(),
                List.of("ROLE_ADMIN")
 
 
