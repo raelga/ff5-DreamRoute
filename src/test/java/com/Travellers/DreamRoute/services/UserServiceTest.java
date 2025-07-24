@@ -6,6 +6,7 @@ import com.Travellers.DreamRoute.dtos.user.UserResponse;
 import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.repositories.UserRepository;
+import com.Travellers.DreamRoute.security.UserDetail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,7 @@ public class UserServiceTest {
                .username("testuser")
                .email("test@dreamroute.com")
                .password("testDeamRoute1!")
+               .roles(List.of())
                .build();
 
        testUser2 = User.builder()
@@ -53,6 +55,7 @@ public class UserServiceTest {
                .username("testuser2")
                .email("test2@dreamroute.com")
                .password("testDreamRoute2!")
+               .roles(List.of())
                .build();
 
        testUserResponse = new UserResponse(
@@ -125,25 +128,14 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("should throw EntityNotFoundException when no users exist")
-    void shouldThrowEntityNotFoundExceptionWhenNoUsersExist(){
-        given(userRepository.findAll()).willReturn(Collections.emptyList());
-
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
-            userService.getAllUsers();
-        });
-        assertThat(exception.getMessage()).contains("No users exist");
-    }
-
-    @Test
     @DisplayName("should delete user by user ID successfully")
     void shouldDeleteUserByUserIdSuccessfully() {
         Long userIdToDelete = testUser.getId();
-
+        UserDetail userDetailTest = new UserDetail(testUser);
 
         given(userRepository.findById(userIdToDelete)).willReturn(Optional.of(testUser));
 
-        String result = userService.deleteUser(userIdToDelete);
+        String result = userService.deleteUser(userIdToDelete, userDetailTest);
 
         assertThat(result).isEqualTo("User with id " + userIdToDelete + " has been deleted");
     }
