@@ -42,6 +42,7 @@ public class UserService implements UserDetailsService {
                 .map(user -> userMapperImpl.entityToDto(user))
                 .toList();
     }
+
     public UserResponse updateUser(Long id, UserRequest userRequest){
         User user = userRepository.findById(id)
                 .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), id));
@@ -52,10 +53,11 @@ public class UserService implements UserDetailsService {
         return userMapperImpl.entityToDto(userRepository.save(user));
     }
 
-    public void deleteUser(Long id) {
+    public String deleteUser(Long id) {
         User userToDelete = userRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), id));
         userRepository.delete(userToDelete);
+        return "User with id " + id + " has been deleted";
     }
 
     @Override

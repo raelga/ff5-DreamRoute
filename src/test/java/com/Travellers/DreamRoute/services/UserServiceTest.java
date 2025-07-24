@@ -135,4 +135,17 @@ public class UserServiceTest {
         assertThat(exception.getMessage()).contains("No users exist");
     }
 
+    @Test
+    @DisplayName("should delete user by user ID successfully")
+    void shouldDeleteUserByUserIdSuccessfully() {
+        Long userIdToDelete = testUser.getId();
+
+
+        given(userRepository.findById(userIdToDelete)).willReturn(Optional.of(testUser));
+
+        String result = userService.deleteUser(userIdToDelete);
+
+        assertThat(result).isEqualTo("User with id " + userIdToDelete + " has been deleted");
+    }
+
 }
