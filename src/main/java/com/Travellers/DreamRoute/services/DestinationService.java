@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -26,6 +27,15 @@ public class DestinationService {
     private void validateUser(UserDetail userDetails) {
         if (userDetails == null || userDetails.getUsername() == null) {
             throw new IllegalArgumentException("User information is missing or invalid");
+        }
+    }
+
+    private void checkOwnership(Destination destination, UserDetail userDetails) {
+        if (userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return;
+        }
+        if (!userDetails.getUsername().equals(destination.getUser().getUsername())) {
+            throw new AccessDeniedException("You are not authorized to perform this action on this destination.");
         }
     }
 
@@ -63,9 +73,12 @@ public class DestinationService {
         return destinationMapperImpl.entityToDto(destination);
     }
 
-    public DestinationResponse updateDestination(Long id, DestinationRequest destinationRequest) {
+    @Transactional
+    public DestinationResponse updateDestination(Long id, DestinationRequest destinationRequest, UserDetail userDetails) {
         Destination destinationToUpdate = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
+
+        checkOwnership(destinationToUpdate, userDetails);
 
         destinationToUpdate.setCountry(destinationRequest.country());
         destinationToUpdate.setCity(destinationRequest.city());
@@ -77,9 +90,13 @@ public class DestinationService {
         return destinationMapperImpl.entityToDto(updatedDestination);
     }
 
-    public String deleteDestination(Long id) {
+    @Transactional
+    public String deleteDestination(Long id, UserDetail userDetails) {
         Destination destinationToDelete = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
+
+        checkOwnership(destinationToDelete, userDetails);
+
         destinationRepository.delete(destinationToDelete);
         return "Destination with id " + id + " has been deleted";
     }
