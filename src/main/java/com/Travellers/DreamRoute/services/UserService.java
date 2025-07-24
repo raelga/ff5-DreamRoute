@@ -84,7 +84,7 @@ public class UserService implements UserDetailsService {
         return userMapperImpl.entityToDto(userRepository.save(user));
     }
 
-    public void deleteUser(Long id, UserDetail userDetail) {
+    public String deleteUser(Long id, UserDetail userDetail) {
         boolean isAdmin = userDetail.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
         if (!isAdmin && !userDetail.getId().equals(id)){
@@ -93,6 +93,7 @@ public class UserService implements UserDetailsService {
         User userToDelete = userRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), id));
         userRepository.delete(userToDelete);
+        return "User with id " + id + " has been deleted";
     }
 
     @Override

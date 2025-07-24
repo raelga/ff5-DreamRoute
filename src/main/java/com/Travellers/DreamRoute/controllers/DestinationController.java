@@ -47,15 +47,17 @@ public class DestinationController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<DestinationResponse> updateDestination(
-            @PathVariable Long id, @RequestBody @Valid DestinationRequest request) {
-        DestinationResponse updatedDestination = destinationService.updateDestination(id, request);
+            @PathVariable Long id, @RequestBody @Valid DestinationRequest request, @AuthenticationPrincipal UserDetail userDetail) {
+        DestinationResponse updatedDestination = destinationService.updateDestination(id, request, userDetail);
         return ResponseEntity.ok(updatedDestination);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteDestination(@PathVariable Long id) {
-        String message = destinationService.deleteDestination(id);
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<String> deleteDestination(@PathVariable Long id, @AuthenticationPrincipal UserDetail userDetail) {
+        String message = destinationService.deleteDestination(id, userDetail);
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 }
