@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -32,8 +33,6 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final UserMapperImpl userMapperImpl;
     private final RoleRepository roleRepository;
-    private final DestinationRepository destinationRepository;
-    private final DestinationMapperImpl destinationMapperImpl;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public UserResponse getUserByUsername(String username){
@@ -101,6 +100,27 @@ public class UserService implements UserDetailsService {
         User user =  userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), username));
         return new UserDetail(user);
+    }
+
+    @Transactional
+    public UserResponse registerUser(UserRequest request) {
+        if (userRepository.existsByUsername(request.username())) {
+            throw new IllegalArgumentException("Username already taken");
+        }
+
+        if (userRepository.existsByEmail(request.email())){
+            throw new IllegalArgumentException("Email already registered");
+        }
+
+        Role defaultRole = roleRepository.findByRoleName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+
+        User user = userMapperImpl.dtoToEntity(request, new ArrayList<>(), List.of(defaultRole));
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        userRepository.save(user);
+        return userMapperImpl.entityToDto(user);
     }
 
 }
