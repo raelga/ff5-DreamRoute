@@ -32,7 +32,6 @@ public class UserMapperImpl implements UserMapper {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getPassword(),
                 destinations,
                 roles
         );
