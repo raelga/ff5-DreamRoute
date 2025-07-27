@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +44,6 @@ public class UserControllerTest {
                 1L,
                 "May",
                 "princesitarockera@gmail.com",
-                "May12345.",
                 List.of("Santa Marta", "Sídney", "Bariloche"),
                 List.of("ROLE_ADMIN")
         );
@@ -61,6 +61,7 @@ public class UserControllerTest {
 
         @Test
         @DisplayName("should return 200 OK and UserResponse for existing username")
+        @WithMockUser(username = "May", roles = {"ADMIN"})
         void shouldGetUserByUsernameSuccessfully() throws Exception {
             String username = "May";
 
@@ -70,7 +71,6 @@ public class UserControllerTest {
                     .andExpect(jsonPath("$.id").value(expectedUserMayResponse.id()))
                     .andExpect(jsonPath("$.username").value(expectedUserMayResponse.username()))
                     .andExpect(jsonPath("$.email").value(expectedUserMayResponse.email()))
-                    .andExpect(jsonPath("$.password").value(expectedUserMayResponse.password()))
                     .andExpect(jsonPath("$.destinations").isArray())
                     .andExpect(jsonPath("$.destinations[0]").value("Santa Marta"))
                     .andExpect(jsonPath("$.destinations[1]").value("Sídney"))
@@ -81,6 +81,7 @@ public class UserControllerTest {
 
         @Test
         @DisplayName("should return 404 Not Found when user does not exist")
+        @WithMockUser(username = "May", roles = {"ADMIN"})
         void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
             String usernameDoesNotExist = "nonexistentuser";
 
