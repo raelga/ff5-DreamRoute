@@ -33,6 +33,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/destinations").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/users/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/users/delete/{id}").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/roles").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/role/{id}").hasRole("ADMIN")
 //                        .anyRequest().authenticated()
                         .anyRequest().permitAll()
                 )
