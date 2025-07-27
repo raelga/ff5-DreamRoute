@@ -43,7 +43,6 @@ public class UserControllerTest {
                 1L,
                 "May",
                 "princesitarockera@gmail.com",
-                "May12345.",
                 List.of("Santa Marta", "Sídney", "Bariloche"),
                 List.of("ROLE_ADMIN")
         );
@@ -70,7 +69,6 @@ public class UserControllerTest {
                     .andExpect(jsonPath("$.id").value(expectedUserMayResponse.id()))
                     .andExpect(jsonPath("$.username").value(expectedUserMayResponse.username()))
                     .andExpect(jsonPath("$.email").value(expectedUserMayResponse.email()))
-                    .andExpect(jsonPath("$.password").value(expectedUserMayResponse.password()))
                     .andExpect(jsonPath("$.destinations").isArray())
                     .andExpect(jsonPath("$.destinations[0]").value("Santa Marta"))
                     .andExpect(jsonPath("$.destinations[1]").value("Sídney"))
