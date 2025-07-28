@@ -41,6 +41,12 @@ public class UserService implements UserDetailsService {
         return userMapperImpl.entityToDto(user);
     }
 
+    public UserResponse getUserById(Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(()->new EntityNotFoundException(User.class.getSimpleName(), id));
+        return userMapperImpl.entityToDto(user);
+    }
+
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()

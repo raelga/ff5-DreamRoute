@@ -2,6 +2,7 @@ package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
+import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.security.UserDetail;
 import com.Travellers.DreamRoute.services.UserService;
 import jakarta.validation.Valid;
@@ -29,6 +30,12 @@ public class UserController {
     @GetMapping("/{username}")
     public ResponseEntity<UserResponse>getUserByUsername(@PathVariable String username) {
         UserResponse user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id){
+        UserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
