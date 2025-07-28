@@ -84,8 +84,9 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), id));
         user.setUsername(userRequest.username());
         user.setEmail(userRequest.email());
-        user.setPassword(passwordEncoder.encode(userRequest.password()));
-
+        if (userRequest.password() != null && !userRequest.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userRequest.password()));
+        }
         return userMapperImpl.entityToDto(userRepository.save(user));
     }
 
