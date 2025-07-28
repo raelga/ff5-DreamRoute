@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +42,19 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private UserResponse expectedUserMayResponse;
+
+    @BeforeEach
+    void setUp() {
+        expectedUserMayResponse = new UserResponse(
+                1L,
+                "May",
+                "princesitarockera@gmail.com",
+                List.of("Santa Marta", "Sídney", "Bariloche"),
+                List.of("ROLE_ADMIN")
+        );
+    }
+
     private String asJsonString(Object object){
         try{
             return objectMapper.writeValueAsString(object);
@@ -49,30 +63,8 @@ public class UserControllerTest {
         }
     }
 
-    private ResultActions performGetRequest(String url, String username, String... roles) throws Exception{
-        return mockMvc.perform(get(url)
-                .with(user(username).roles(roles))
-                .accept(MediaType.APPLICATION_JSON));
-    }
-
-    private ResultActions performPostRequest(String url, Object body, UserDetail userDetail) throws Exception {
-        return mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(body))
-                .with(user(userDetail))
-                .accept(MediaType.APPLICATION_JSON));
-    }
-
-    private ResultActions performPostRequestUnauthenticated(String url, Object body) throws Exception {
-        return mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(body))
-                .accept(MediaType.APPLICATION_JSON));
-    }
-
-    private ResultActions performDeleteRequest(String url, String username, String... roles) throws Exception {
-        return mockMvc.perform(delete(url)
-                .with(user(username).roles(roles))
+    private ResultActions performGetRequest(String urlTemplate, Object... uriVars) throws Exception {
+        return mockMvc.perform(get(urlTemplate, uriVars)
                 .accept(MediaType.APPLICATION_JSON));
     }
 
@@ -83,7 +75,7 @@ public class UserControllerTest {
         @Test
         @DisplayName("should return all users with status 200 OK and correct content type")
         void getAllUsers_returnsListOfUsers() throws Exception {
-            performGetRequest("/users/all", "May", "ADMIN")
+            performGetRequest("/users/all", "May", "ROLE_ADMIN")
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(6)))
@@ -120,59 +112,42 @@ public class UserControllerTest {
 
     }
 
-//    @BeforeEach
-//    void setUp() {
-//        expectedUserMayResponse = new UserResponse(
-//                1L,
-//                "May",
-//                "princesitarockera@gmail.com",
-//                "May12345.",
-//                List.of("Santa Marta", "Sídney", "Bariloche"),
-//                List.of("ROLE_ADMIN")
-//        );
-//    }
-//
-//    private ResultActions performGetRequest(String urlTemplate, Object... uriVars) throws Exception {
-//        return mockMvc.perform(get(urlTemplate, uriVars)
-//                .accept(MediaType.APPLICATION_JSON));
-//    }
-//
-//
-//    @Nested
-//    @DisplayName("GET /users/{username}")
-//    class GetUserByUsernameTests {
-//
-//        @Test
-//        @DisplayName("should return 200 OK and UserResponse for existing username")
-//        void shouldGetUserByUsernameSuccessfully() throws Exception {
-//            String username = "May";
-//
-//            performGetRequest("/users/{username}", username)
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                    .andExpect(jsonPath("$.id").value(expectedUserMayResponse.id()))
-//                    .andExpect(jsonPath("$.username").value(expectedUserMayResponse.username()))
-//                    .andExpect(jsonPath("$.email").value(expectedUserMayResponse.email()))
-//                    .andExpect(jsonPath("$.password").value(expectedUserMayResponse.password()))
-//                    .andExpect(jsonPath("$.destinations").isArray())
-//                    .andExpect(jsonPath("$.destinations[0]").value("Santa Marta"))
-//                    .andExpect(jsonPath("$.destinations[1]").value("Sídney"))
-//                    .andExpect(jsonPath("$.destinations[2]").value("Bariloche"))
-//                    .andExpect(jsonPath("$.roles").isArray())
-//                    .andExpect(jsonPath("$.roles[0]").value("ROLE_ADMIN"));
-//        }
-//
-//        @Test
-//        @DisplayName("should return 404 Not Found when user does not exist")
-//        void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
-//            String usernameDoesNotExist = "nonexistentuser";
-//
-//            performGetRequest("/users/{username}", usernameDoesNotExist)
-//                    .andExpect(status().isNotFound())
-//                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                    .andExpect(jsonPath("$.message").value("User not found with username " + usernameDoesNotExist));
-//        }
-//
-//
-//    }
+    @Nested
+    @DisplayName("GET /users/{username}")
+    class GetUserByUsernameTests {
+
+        @Test
+        @DisplayName("should return 200 OK and UserResponse for existing username")
+        @WithMockUser(username = "May", roles = {"ADMIN"})
+        void shouldGetUserByUsernameSuccessfully() throws Exception {
+            String username = "May";
+
+            performGetRequest("/users/{username}", username)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").value(expectedUserMayResponse.id()))
+                    .andExpect(jsonPath("$.username").value(expectedUserMayResponse.username()))
+                    .andExpect(jsonPath("$.email").value(expectedUserMayResponse.email()))
+                    .andExpect(jsonPath("$.destinations").isArray())
+                    .andExpect(jsonPath("$.destinations[0]").value("Santa Marta"))
+                    .andExpect(jsonPath("$.destinations[1]").value("Sídney"))
+                    .andExpect(jsonPath("$.destinations[2]").value("Bariloche"))
+                    .andExpect(jsonPath("$.roles").isArray())
+                    .andExpect(jsonPath("$.roles[0]").value("ROLE_ADMIN"));
+        }
+
+        @Test
+        @DisplayName("should return 404 Not Found when user does not exist")
+        @WithMockUser(username = "May", roles = {"ADMIN"})
+        void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+            String usernameDoesNotExist = "nonexistentuser";
+
+            performGetRequest("/users/{username}", usernameDoesNotExist)
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.message").value("User not found with username " + usernameDoesNotExist));
+        }
+
+
+    }
 }

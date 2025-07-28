@@ -62,7 +62,6 @@ public class UserServiceTest {
                1L,
                "testuser",
                "test@dreamroute.com",
-               "testDreamRoute1!",
                List.of(),
                List.of("ROLE_USER")
        );
@@ -71,7 +70,6 @@ public class UserServiceTest {
                2L,
                "testuser2",
                "test2@dreamroute.com",
-               "testDreamRoute2!",
                List.of(),
                List.of("ROLE_ADMIN")
 
