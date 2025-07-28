@@ -1,7 +1,10 @@
 package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
+import com.Travellers.DreamRoute.models.Role;
+import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.security.UserDetail;
+import com.Travellers.DreamRoute.security.jwt.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +21,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.hasSize;
@@ -42,7 +46,12 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JwtService jwtService;
+
     private UserResponse expectedUserMayResponse;
+
+    private String token;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +62,17 @@ public class UserControllerTest {
                 List.of("Santa Marta", "Sídney", "Bariloche"),
                 List.of("ROLE_ADMIN")
         );
+        User user = new User();
+        user.setUsername("May");
+
+        Role role = Role.builder()
+                .roleName("ROLE_ADMIN")
+                .build();
+
+        user.setRoles(List.of(role));
+
+        UserDetail userDetail = new UserDetail(user);
+        token = jwtService.generateToken(userDetail);
     }
 
     private String asJsonString(Object object){
@@ -65,6 +85,7 @@ public class UserControllerTest {
 
     private ResultActions performGetRequest(String urlTemplate, Object... uriVars) throws Exception {
         return mockMvc.perform(get(urlTemplate, uriVars)
+                .header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON));
     }
 
@@ -75,7 +96,7 @@ public class UserControllerTest {
         @Test
         @DisplayName("should return all users with status 200 OK and correct content type")
         void getAllUsers_returnsListOfUsers() throws Exception {
-            performGetRequest("/users/all", "May", "ROLE_ADMIN")
+            performGetRequest("/users/all")
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(6)))
@@ -87,7 +108,7 @@ public class UserControllerTest {
         @Test
         @DisplayName("Should return users with expected structure and data types")
         void getAllUsers_returnsCorrectStructureAndTypes() throws Exception {
-            performGetRequest("/users/all", "May", "ADMIN")
+            performGetRequest("/users/all")
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].id").isNumber())
                     .andExpect(jsonPath("$[0].username").isString())
@@ -104,9 +125,11 @@ public class UserControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "Deb", roles = {"USER"})
         @DisplayName("should return 403 Forbidden when a normal USER tries to get all users")
         void getAllUsers_asNormalUser_shouldReturnForbidden() throws Exception {
-            performGetRequest("/users/all", "Deb", "USER")
+            mockMvc.perform(get("/users/all")
+                    .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
         }
 
