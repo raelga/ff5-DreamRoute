@@ -11,9 +11,13 @@ import com.Travellers.DreamRoute.repositories.UserRepository;
 import com.Travellers.DreamRoute.security.UserDetail;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.access.AccessDeniedException;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -44,6 +48,32 @@ public class DestinationService {
         return destinations.stream()
                 .map(destination -> destinationMapperImpl.entityToDto(destination))
                 .toList();
+    }
+
+    public List<DestinationResponse> getDestinationsStartingWithCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetail)) {
+            return getAllDestinations();
+        }
+
+        UserDetail currentUserDetail = (UserDetail) authentication.getPrincipal();
+        Long currentUserId = currentUserDetail.getId();
+
+        List<DestinationResponse> userOwnedDestinations = getDestinationsByUserId(currentUserId);
+
+        List<Destination> allDestinationEntities = destinationRepository.findAll();
+
+        List<DestinationResponse> otherUsersDestinations = allDestinationEntities.stream()
+                .filter(destination -> !destination.getUser().getId().equals(currentUserId))
+                .map(destination -> destinationMapperImpl.entityToDto(destination))
+                .toList();
+
+        List<DestinationResponse> finalOrderedList = new ArrayList<>();
+        finalOrderedList.addAll(userOwnedDestinations);
+        finalOrderedList.addAll(otherUsersDestinations);
+
+        return finalOrderedList;
     }
 
     public DestinationResponse getDestinationById(Long id) {

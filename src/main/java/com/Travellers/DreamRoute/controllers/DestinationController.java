@@ -23,8 +23,8 @@ public class DestinationController {
 
     @GetMapping
     public ResponseEntity<List<DestinationResponse>> getAllDestinations() {
-        List<DestinationResponse> destinations = destinationService.getAllDestinations();
-        return ResponseEntity.ok(destinations);
+        List<DestinationResponse> orderedDestinations = destinationService.getDestinationsStartingWithCurrentUser();
+        return ResponseEntity.ok(orderedDestinations);
     }
 
     @GetMapping("/{id}")
