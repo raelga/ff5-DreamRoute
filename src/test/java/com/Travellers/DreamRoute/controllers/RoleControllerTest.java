@@ -50,7 +50,7 @@ public class RoleControllerTest {
 
     @BeforeEach
     void setUp() throws Exception{
-    Role adminRole = roleRepository.findByRoleName("ROLE_ADMIN")
+    Role adminRole = roleRepository.findByRoleNameIgnoreCase("ROLE_ADMIN")
             .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_ADMIN", null)));
 
         String ADMIN_USERNAME = "testAdminUser";

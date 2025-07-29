@@ -240,10 +240,20 @@ public class DestinationControllerTest {
         }
 
         @Test
-        @DisplayName("Should return 403 Forbidden when authenticated as ADMIN (if only USER has permission)")
-        void addDestination_returnsForbidden_whenAuthenticatedAsAdmin() throws Exception {
+        @DisplayName("Should create a new destination when authenticated as ADMIN with valid data (201 Created)")
+        void addDestination_createsNewDestination_whenAdminAuthenticatedAndValid() throws Exception {
             performPostRequest("/destinations", validDestinationRequest, userDetailAdminRole)
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").isNumber())
+                    .andExpect(jsonPath("$.country", is("Francia")))
+                    .andExpect(jsonPath("$.city", is("Paris")))
+                    .andExpect(jsonPath("$.username", is(EXISTING_USERNAME_ADMIN)));
+
+            mockMvc.perform(get("/destinations")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(11)));
         }
 
         @Test
