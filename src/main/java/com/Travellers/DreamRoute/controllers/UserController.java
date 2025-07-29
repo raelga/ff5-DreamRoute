@@ -2,6 +2,7 @@ package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
+import com.Travellers.DreamRoute.dtos.user.UserUpdateRequest;
 import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.security.UserDetail;
 import com.Travellers.DreamRoute.services.UserService;
@@ -47,7 +48,7 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest userRequest, @AuthenticationPrincipal UserDetail userDetail) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userRequest, @AuthenticationPrincipal UserDetail userDetail) {
         UserResponse user = userService.updateUser(id, userRequest, userDetail);
         return ResponseEntity.ok(user);
     }

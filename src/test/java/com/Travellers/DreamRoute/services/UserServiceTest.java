@@ -182,7 +182,7 @@ public class UserServiceTest {
 
            given(userRepository.existsByUsername(request.username())).willReturn(false);
            given(userRepository.existsByEmail(request.email())).willReturn(false);
-           given(roleRepository.findByRoleName("ROLE_USER")).willReturn(Optional.of(defaultRole));
+           given(roleRepository.findByRoleNameIgnoreCase("ROLE_USER")).willReturn(Optional.of(defaultRole));
            given(userMapperImpl.dtoToEntity(request, new ArrayList<>(), List.of(defaultRole))).willReturn(newUser);
            given(passwordEncoder.encode(request.password())).willReturn("encodedPassword123");
            given(userMapperImpl.entityToDto(newUser)).willReturn(testUserResponse);
