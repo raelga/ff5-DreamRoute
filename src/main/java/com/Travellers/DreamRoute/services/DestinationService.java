@@ -105,6 +105,7 @@ public class DestinationService {
 
     @Transactional
     public DestinationResponse updateDestination(Long id, DestinationRequest destinationRequest, UserDetail userDetails) {
+        validateUser(userDetails);
         Destination destinationToUpdate = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
 
@@ -122,6 +123,7 @@ public class DestinationService {
 
     @Transactional
     public String deleteDestination(Long id, UserDetail userDetails) {
+        validateUser(userDetails);
         Destination destinationToDelete = destinationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Destination.class.getSimpleName(), id));
 
