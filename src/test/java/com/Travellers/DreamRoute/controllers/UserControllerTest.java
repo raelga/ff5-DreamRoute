@@ -117,11 +117,11 @@ public class UserControllerTest {
         }
 
         @Test
-        @DisplayName("should return 403 Forbidden if not authenticated (or unauthorized)")
+        @DisplayName("should return 401 Unauthorized if not authenticated")
         void getAllUsers_returnsUnauthorizedWhenNotAuthenticated() throws Exception {
             mockMvc.perform(get("/users/all")
                             .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test

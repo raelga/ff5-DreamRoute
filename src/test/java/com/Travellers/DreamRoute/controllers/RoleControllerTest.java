@@ -123,10 +123,10 @@ public class RoleControllerTest {
         }
 
         @Test
-        @DisplayName("Without authentication should return a 403")
-        void shouldReturn403WhenNotAuthenticated() throws Exception {
+        @DisplayName("Without authentication should return a 401 Unauthorized")
+        void shouldReturn401WhenNotAuthenticated() throws Exception {
             mockMvc.perform(get("/roles"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }
