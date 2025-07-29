@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException exception){
         ErrorResponse error = ErrorResponse.builder()
-                .message("Access denied: " + exception.getMessage())
+                .message(exception.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
