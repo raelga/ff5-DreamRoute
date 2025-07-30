@@ -15,15 +15,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import javax.swing.text.html.Option;
+import org.springframework.security.access.AccessDeniedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
@@ -174,7 +173,7 @@ public class DestinationServiceTest {
                     .build();
             testUserDetail = new UserDetail(testUser);
 
-            validRequest = new DestinationRequest("Chile", "Santiago", "una ciudad increible", "http://image.png");
+            validRequest = new DestinationRequest("Chile", "Santiago", "una ciudad increíble", "http://image.png");
             savedDestinationEntity = Destination.builder()
                     .id(1L)
                     .country(validRequest.country())
@@ -227,4 +226,276 @@ public class DestinationServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("updateDestination(Long id, DestinationRequest destinationRequest, UserDetail userDetails)")
+    class UpdateDestinationTests {
+        private User ownerUser;
+        private User otherUser;
+        private User adminUser;
+        private UserDetail ownerUserDetail;
+        private UserDetail otherUserDetail;
+        private UserDetail adminUserDetail;
+        private Destination ownedDestination;
+        private Destination otherDestination;
+        private DestinationRequest updateRequest;
+        private Destination updatedOwnedDestinationEntity;
+        private DestinationResponse expectedResponse;
+
+        @BeforeEach
+        void setup() {
+            ownerUser = User.builder()
+                    .id(1L)
+                    .username("ownerUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_USER")))
+                    .build();
+            ownerUserDetail = new UserDetail(ownerUser);
+
+            otherUser = User.builder()
+                    .id(2L)
+                    .username("otherUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_USER")))
+                    .build();
+            otherUserDetail = new UserDetail(otherUser);
+
+            adminUser = User.builder()
+                    .id(3L)
+                    .username("adminUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_ADMIN")))
+                    .build();
+            adminUserDetail = new UserDetail(adminUser);
+
+            ownedDestination = new Destination(100L, "Honduras", "Roatán", "Isla bonita", "http://roatan.png", ownerUser);
+            otherDestination = new Destination(200L, "Guatemala", "Antigua Guatemala", "Ciudad colonial", "http://antigua.png", otherUser);
+
+            updateRequest = new DestinationRequest("Updated Country", "Updated City", "Updated Description", "http://updated.png");
+
+            updatedOwnedDestinationEntity = Destination.builder()
+                    .id(ownedDestination.getId())
+                    .country(updateRequest.country())
+                    .city(updateRequest.city())
+                    .description(updateRequest.description())
+                    .image(updateRequest.image())
+                    .user(ownerUser)
+                    .build();
+
+            expectedResponse = new DestinationResponse(
+                    updatedOwnedDestinationEntity.getId(),
+                    updatedOwnedDestinationEntity.getCountry(),
+                    updatedOwnedDestinationEntity.getCity(),
+                    updatedOwnedDestinationEntity.getDescription(),
+                    updatedOwnedDestinationEntity.getImage(),
+                    ownerUser.getUsername()
+            );
+        }
+
+        @Test
+        @DisplayName("Should update destination successfully when authorized as owner")
+        void shouldUpdateDestinationSuccessfully_whenAuthorizedAsOwner() {
+            Long destinationId = ownedDestination.getId();
+
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(ownedDestination));
+
+            given(destinationRepository.save(ArgumentMatchers.any(Destination.class))).willReturn(updatedOwnedDestinationEntity);
+
+            given(destinationMapperImpl.entityToDto(updatedOwnedDestinationEntity)).willReturn(expectedResponse);
+
+            DestinationResponse result = destinationService.updateDestination(destinationId, updateRequest, ownerUserDetail);
+
+            assertThat(result).isEqualTo(expectedResponse);
+            verify(destinationRepository).findById(destinationId);
+
+            verify(destinationRepository).save(ArgumentMatchers.any(Destination.class));
+            verify(destinationMapperImpl).entityToDto(updatedOwnedDestinationEntity);
+        }
+
+        @Test
+        @DisplayName("Should update destination successfully when authorized as admin")
+        void shouldUpdateDestinationSuccessfully_whenAuthorizedAsAdmin() {
+            Long destinationId = otherDestination.getId();
+            Destination updatedOtherDestinationEntity = Destination.builder()
+                    .id(otherDestination.getId())
+                    .country(updateRequest.country())
+                    .city(updateRequest.city())
+                    .description(updateRequest.description())
+                    .image(updateRequest.image())
+                    .user(otherUser)
+                    .build();
+            DestinationResponse expectedAdminResponse = new DestinationResponse(
+                    updatedOtherDestinationEntity.getId(),
+                    updatedOtherDestinationEntity.getCountry(),
+                    updatedOtherDestinationEntity.getCity(),
+                    updatedOtherDestinationEntity.getDescription(),
+                    updatedOtherDestinationEntity.getImage(),
+                    otherUser.getUsername()
+            );
+
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(otherDestination));
+            given(destinationRepository.save(ArgumentMatchers.any(Destination.class))).willReturn(updatedOtherDestinationEntity);
+            given(destinationMapperImpl.entityToDto(updatedOtherDestinationEntity)).willReturn(expectedAdminResponse);
+
+            DestinationResponse result = destinationService.updateDestination(destinationId, updateRequest, adminUserDetail);
+
+            assertThat(result).isEqualTo(expectedAdminResponse);
+            verify(destinationRepository).findById(destinationId);
+            verify(destinationRepository).save(ArgumentMatchers.any(Destination.class));
+            verify(destinationMapperImpl).entityToDto(updatedOtherDestinationEntity);
+        }
+
+        @Test
+        @DisplayName("Should throw AccessDeniedException when regular user is not the owner")
+        void shouldThrowAccessDeniedException_whenRegularUserIsNotOwner() {
+            Long destinationId = otherDestination.getId();
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(otherDestination));
+
+            assertThatThrownBy(() -> destinationService.updateDestination(destinationId, updateRequest, ownerUserDetail))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessage("You are not authorized to perform this action on this destination.");
+
+            verify(destinationRepository).findById(destinationId);
+            verify(destinationRepository, never()).save(ArgumentMatchers.any(Destination.class));
+            verify(destinationMapperImpl, never()).entityToDto(ArgumentMatchers.any(Destination.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when UserDetail is missing or invalid")
+        void shouldThrowIllegalArgumentException_whenUserDetailsIsInvalid() {
+            Long destinationId = ownedDestination.getId();
+
+            assertThatThrownBy(() -> destinationService.updateDestination(destinationId, updateRequest, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("User information is missing or invalid");
+
+            verify(destinationRepository, never()).findById(ArgumentMatchers.anyLong());
+            verify(destinationRepository, never()).save(ArgumentMatchers.any(Destination.class));
+            verify(destinationMapperImpl, never()).entityToDto(ArgumentMatchers.any(Destination.class));
+        }
+
+        @Test
+        @DisplayName("Should throw EntityNotFoundException when Destination ID is not found")
+        void shouldThrowEntityNotFoundException_whenDestinationIdNotFound() {
+            Long nonExistentId = 999L;
+            given(destinationRepository.findById(nonExistentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> destinationService.updateDestination(nonExistentId, updateRequest, ownerUserDetail))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessageContaining("Destination not found with id " + nonExistentId);
+
+            verify(destinationRepository).findById(nonExistentId);
+            verify(destinationRepository, never()).save(ArgumentMatchers.any(Destination.class));
+            verify(destinationMapperImpl, never()).entityToDto(ArgumentMatchers.any(Destination.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteDestination(Long id, UserDetail userDetails)")
+    class DeleteDestinationTests {
+        private User ownerUser;
+        private User otherUser;
+        private User adminUser;
+        private UserDetail ownerUserDetail;
+        private UserDetail otherUserDetail;
+        private UserDetail adminUserDetail;
+        private Destination ownedDestination;
+        private Destination otherDestination;
+
+        @BeforeEach
+        void setup() {
+            ownerUser = User.builder()
+                    .id(1L)
+                    .username("ownerUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_USER")))
+                    .build();
+            ownerUserDetail = new UserDetail(ownerUser);
+
+            otherUser = User.builder()
+                    .id(2L)
+                    .username("otherUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_USER")))
+                    .build();
+            otherUserDetail = new UserDetail(otherUser);
+
+            adminUser = User.builder()
+                    .id(3L)
+                    .username("adminUser")
+                    .password("encoded_password")
+                    .roles(Collections.singletonList(createRole("ROLE_ADMIN")))
+                    .build();
+            adminUserDetail = new UserDetail(adminUser);
+
+            ownedDestination = new Destination(100L, "Honduras", "Roatán", "Isla bonita", "http://roatan.png", ownerUser);
+            otherDestination = new Destination(200L, "Guatemala", "Antigua Guatemala", "Ciudad colonial", "http://antigua.png", otherUser);
+        }
+
+        @Test
+        @DisplayName("Should delete destination successfully when authorized as owner")
+        void shouldDeleteDestinationSuccessfully_whenAuthorizedAsOwner() {
+            Long destinationId = ownedDestination.getId();
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(ownedDestination));
+
+            String result = destinationService.deleteDestination(destinationId, ownerUserDetail);
+
+            assertThat(result).isEqualTo("Destination with id " + destinationId + " has been deleted");
+            verify(destinationRepository).findById(destinationId);
+            verify(destinationRepository).delete(ownedDestination);
+        }
+
+        @Test
+        @DisplayName("Should delete destination successfully when authorized as admin")
+        void shouldDeleteDestinationSuccessfully_whenAuthorizedAsAdmin() {
+            Long destinationId = otherDestination.getId();
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(otherDestination));
+
+            String result = destinationService.deleteDestination(destinationId, adminUserDetail);
+
+            assertThat(result).isEqualTo("Destination with id " + destinationId + " has been deleted");
+            verify(destinationRepository).findById(destinationId);
+            verify(destinationRepository).delete(otherDestination);
+        }
+
+        @Test
+        @DisplayName("Should throw AccessDeniedException when regular user is not the owner")
+        void shouldThrowAccessDeniedException_whenRegularUserIsNotOwner() {
+            Long destinationId = otherDestination.getId();
+            given(destinationRepository.findById(destinationId)).willReturn(Optional.of(otherDestination));
+
+            assertThatThrownBy(() -> destinationService.deleteDestination(destinationId, ownerUserDetail))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessage("You are not authorized to perform this action on this destination.");
+
+            verify(destinationRepository).findById(destinationId);
+            verify(destinationRepository, never()).delete(ArgumentMatchers.any(Destination.class));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when UserDetail is missing or invalid")
+        void shouldThrowIllegalArgumentException_whenUserDetailsIsInvalid() {
+            Long destinationId = ownedDestination.getId();
+
+            assertThatThrownBy(() -> destinationService.deleteDestination(destinationId, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("User information is missing or invalid");
+
+            verify(destinationRepository, never()).findById(ArgumentMatchers.anyLong());
+            verify(destinationRepository, never()).delete(ArgumentMatchers.any(Destination.class));
+        }
+
+        @Test
+        @DisplayName("Should throw EntityNotFoundException when Destination ID is not found")
+        void shouldThrowEntityNotFoundException_whenDestinationIdNotFound() {
+            Long nonExistentId = 999L;
+            given(destinationRepository.findById(nonExistentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> destinationService.deleteDestination(nonExistentId, ownerUserDetail))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessageContaining("Destination not found with id " + nonExistentId);
+
+            verify(destinationRepository).findById(nonExistentId);
+            verify(destinationRepository, never()).delete(ArgumentMatchers.any(Destination.class));
+        }
+    }
 }
