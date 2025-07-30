@@ -20,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +36,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.result.StatusResultMatchersExtensionsKt.isEqualTo;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService Unit Tests")
@@ -95,42 +98,42 @@ public class UserServiceTest {
                 List.of("ROLE_USER")
         );
 
-        testUserResponse2 = new UserResponse(
-                2L,
-                "testuser2",
-                "test2@dreamroute.com",
-                List.of(),
-                List.of("ROLE_ADMIN")
-        );
+       testUserResponse2 = new UserResponse(
+               2L,
+               "testuser2",
+               "test2@dreamroute.com",
+               List.of(),
+               List.of("ROLE_ADMIN")
+       );
 
+       adminUser = User.builder()
+               .id(100L)
+               .username("admin_user_test")
+               .email("admin_user@test.com")
+               .password("encodedAdminPassword")
+               .roles(new ArrayList<>(List.of(adminRole)))
+               .build();
 
-        adminUser = User.builder()
-                .id(100L)
-                .username("admin_user_test")
-                .email("admin_user@test.com")
-                .password("encodedAdminPassword")
-                .roles(new ArrayList<>(List.of(adminRole)))
-                .build();
+       normalUser = User.builder()
+               .id(101L)
+               .username("normal_user_test")
+               .email("normal_user@test.com")
+               .password("encodedNormalUserPassword")
+               .roles(new ArrayList<>(List.of(userRole)))
+               .build();
 
-        normalUser = User.builder()
-                .id(101L)
-                .username("normal_user_test")
-                .email("normal_user@test.com")
-                .password("encodedNormalUserPassword")
-                .roles(new ArrayList<>(List.of(userRole)))
-                .build();
+       anotherNormalUser = User.builder()
+               .id(102L)
+               .username("another_normal_user_test")
+               .email("another_user@test.com")
+               .password("encodedAnotherNormalPassword")
+               .roles(new ArrayList<>(List.of(userRole)))
+               .build();
 
-        anotherNormalUser = User.builder()
-                .id(102L)
-                .username("another_normal_user_test")
-                .email("another_user@test.com")
-                .password("encodedAnotherNormalPassword")
-                .roles(new ArrayList<>(List.of(userRole)))
-                .build();
+       adminUserDetail = new UserDetail(adminUser);
+       normalUserDetail = new UserDetail(normalUser);
+   }
 
-        adminUserDetail = new UserDetail(adminUser);
-        normalUserDetail = new UserDetail(normalUser);
-    }
 
 
     @Nested
@@ -195,8 +198,8 @@ public class UserServiceTest {
     @DisplayName("Delete User")
     class DeleteUser {
         @Test
-        @DisplayName("should delete user by user ID successfully")
-        void shouldDeleteUserByUserIdSuccessfully() {
+        @DisplayName("should delete user by user ID successfully when user is admin")
+        void shouldDeleteUserByUserIdSuccessfullyWhenUserIsAdmin() {
             Long userIdToDelete = testUser.getId();
             UserDetail userDetailTest = adminUserDetail;
 
@@ -224,6 +227,35 @@ public class UserServiceTest {
             verify(userRepository, times(1)).findById(nonExistentId);
             verify(userRepository, never()).deleteById(org.mockito.ArgumentMatchers.anyLong());
             verify(userRepository, never()).delete(any(User.class));
+        }
+
+        @Test
+        @DisplayName("should throw AccessDeniedException when non-admin user tries to delete a user")
+        void shouldNotAllowDeleteUserByUserIdWhenUserIsNotAdmin() {
+            Long userIdToDelete = testUser2.getId();
+            UserDetail userDetailTest = new UserDetail(testUser);
+
+            AccessDeniedException thrown = assertThrows(AccessDeniedException.class, () -> {
+                userService.deleteUser(userIdToDelete, userDetailTest);
+            });
+
+            assertThat(thrown.getMessage()).contains("Only administrators can delete users");
+        }
+
+        @Test
+        @DisplayName("should throw EntityNotFoundException when admin attempts to delete non-existent user")
+        void shouldThrowEntityNotFoundExceptionWhenAdminTriesToDeleteNonExistentUser() {
+            Long nonExistentUserId = 99L;
+            UserDetail adminUserDetail = new UserDetail(testUser2);
+
+            given(userRepository.findById(nonExistentUserId)).willReturn(Optional.empty());
+
+            EntityNotFoundException thrown = assertThrows(EntityNotFoundException.class, () -> {
+                userService.deleteUser(nonExistentUserId, adminUserDetail);
+            });
+
+            assertThat(thrown.getMessage()).contains("User not found with id " + nonExistentUserId);
+
         }
     }
 

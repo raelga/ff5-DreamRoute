@@ -11,6 +11,7 @@ import com.Travellers.DreamRoute.repositories.UserRepository;
 import com.Travellers.DreamRoute.security.UserDetail;
 import com.Travellers.DreamRoute.security.jwt.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -242,207 +243,284 @@ public class UserControllerTest {
                     .andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.message").value("User not found with username " + usernameDoesNotExist));
+            }
         }
 
-        @Test
-        @DisplayName("should return 401 Unauthorized if not authenticated")
-        void getByUsername_returnsUnauthorizedWhenNotAuthenticated() throws Exception {
-            mockMvc.perform(get("/users/{username}", ADMIN_USERNAME)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isUnauthorized());
-        }
+    @Test
+    @DisplayName("should return 401 Unauthorized if not authenticated")
+    void getByUsername_returnsUnauthorizedWhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/users/{username}", ADMIN_USERNAME)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+}
+
+@Nested
+@DisplayName("PUT /users/update/{id}")
+class UpdateUserTest {
+
+    @Test
+    @DisplayName("Admin should be able to update their own username and email")
+    void adminCanUpdateOwnProfile() throws Exception {
+        String newUsername = "newAdminUsername";
+        String newEmail = "newadmin@test.com";
+        UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, null, null);
+
+        performPutRequest(adminId, updateRequest, adminJwt)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(newUsername))
+                .andExpect(jsonPath("$.email").value(newEmail))
+                .andExpect(jsonPath("$.roles[0]").value("ROLE_ADMIN"));
+
+        User updatedUser = userRepository.findById(adminId).orElseThrow();
+        assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
+        assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
     }
 
-    @Nested
-    @DisplayName("PUT /users/update/{id}")
-    class UpdateUserTest {
+    @Test
+    @DisplayName("Admin should be able to update another user's username and email")
+    void adminCanUpdateAnotherUserProfile() throws Exception {
+        String newUsername = "updatedAnotherUser";
+        String newEmail = "updated_another@test.com";
+        UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, null, null);
 
-        @Test
-        @DisplayName("Admin should be able to update their own username and email")
-        void adminCanUpdateOwnProfile() throws Exception {
-            String newUsername = "newAdminUsername";
-            String newEmail = "newadmin@test.com";
-            UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, null, null);
+        performPutRequest(anotherUserId, updateRequest, adminJwt)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(newUsername))
+                .andExpect(jsonPath("$.email").value(newEmail));
 
-            performPutRequest(adminId, updateRequest, adminJwt)
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.username").value(newUsername))
-                    .andExpect(jsonPath("$.email").value(newEmail))
-                    .andExpect(jsonPath("$.roles[0]").value("ROLE_ADMIN"));
-
-            User updatedUser = userRepository.findById(adminId).orElseThrow();
-            assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
-            assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
-        }
-
-        @Test
-        @DisplayName("Admin should be able to update another user's username and email")
-        void adminCanUpdateAnotherUserProfile() throws Exception {
-            String newUsername = "updatedAnotherUser";
-            String newEmail = "updated_another@test.com";
-            UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, null, null);
-
-            performPutRequest(anotherUserId, updateRequest, adminJwt)
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.username").value(newUsername))
-                    .andExpect(jsonPath("$.email").value(newEmail));
-
-            User updatedUser = userRepository.findById(anotherUserId).orElseThrow();
-            assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
-            assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
-        }
-
-        @Test
-        @DisplayName("Admin should be able to change another user's roles")
-        void adminCanChangeAnotherUserRoles() throws Exception {
-            User anotherUserInDb = userRepository.findById(anotherUserId)
-                    .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
-
-            UserUpdateRequest updateRequest = new UserUpdateRequest(
-                    anotherUserInDb.getUsername(),
-                    anotherUserInDb.getEmail(),
-                    null,
-                    List.of("ROLE_USER")
-            );
-
-            performPutRequest(anotherUserId, updateRequest, adminJwt)
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.roles.length()").value(1))
-                    .andExpect(jsonPath("$.roles[0]").value("ROLE_USER"));
-
-            User updatedUser = userRepository.findById(anotherUserId).orElseThrow();
-            assertThat(updatedUser.getRoles()).hasSize(1);
-            assertThat(updatedUser.getRoles().getFirst().getRoleName()).isEqualTo("ROLE_USER");
-            assertThat(updatedUser.getUsername()).isEqualTo(anotherUserInDb.getUsername());
-            assertThat(updatedUser.getEmail()).isEqualTo(anotherUserInDb.getEmail());
-        }
-
-        @Test
-        @DisplayName("Admin should NOT be able to change another user's password")
-        void adminCannotChangeAnotherUserPassword() throws Exception {
-            String newPassword = "newPassword123.";
-            User anotherUserInDb = userRepository.findById(anotherUserId)
-                    .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
-
-            UserUpdateRequest updateRequest = new UserUpdateRequest(
-                    anotherUserInDb.getUsername(),
-                    anotherUserInDb.getEmail(),
-                    newPassword,
-                    List.of()
-            );
-
-            performPutRequest(anotherUserId, updateRequest, adminJwt)
-                    .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.message").value("Admins are not allowed to change passwords of other users"));
-        }
-
-        @Test
-        @DisplayName("Admin should be able to change their own password")
-        void adminCanChangeOwnPassword() throws Exception {
-            String newPassword = "newAdminPassword123.";
-            User adminUserInDb = userRepository.findById(adminId)
-                    .orElseThrow(() -> new RuntimeException("Test setup error: adminUser not found"));
-
-            UserUpdateRequest updateRequest = new UserUpdateRequest(
-                    adminUserInDb.getUsername(),
-                    adminUserInDb.getEmail(),
-                    newPassword,
-                    List.of()
-            );
-
-            performPutRequest(adminId, updateRequest, adminJwt)
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(adminId));
-
-            User updatedUser = userRepository.findById(adminId).orElseThrow();
-            assertThat(passwordEncoder.matches(newPassword, updatedUser.getPassword())).isTrue();
-        }
-
-        @Test
-        @DisplayName("Normal user should be able to update their own username, email and password")
-        void userCanUpdateOwnProfile() throws Exception {
-            String newUsername = "newUserTest";
-            String newEmail = "newuser@test.com";
-            String newPassword = "newPasswordUser123.";
-            UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, newPassword, List.of());
-
-            performPutRequest(userId, updateRequest, userJwt)
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.username").value(newUsername))
-                    .andExpect(jsonPath("$.email").value(newEmail));
-
-            User updatedUser = userRepository.findById(userId).orElseThrow();
-            assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
-            assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
-            assertThat(passwordEncoder.matches(newPassword, updatedUser.getPassword())).isTrue();
-        }
-
-        @Test
-        @DisplayName("Normal user should NOT be able to change their own roles")
-        void userCannotChangeOwnRoles() throws Exception {
-            User currentUserInDb = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("Test setup error: currentUser not found"));
-
-            UserUpdateRequest updateRequest = new UserUpdateRequest(
-                    currentUserInDb.getUsername(),
-                    currentUserInDb.getEmail(),
-                    null,
-                    List.of("ROLE_ADMIN")
-            );
-
-            performPutRequest(userId, updateRequest, userJwt)
-                    .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.message").value("Users are not allowed to change their own roles"));
-        }
-
-        @Test
-        @DisplayName("Normal user should NOT be able to update another user's profile")
-        void userCannotUpdateAnotherUserProfile() throws Exception {
-            String newUsername = "shouldNotChange";
-            User anotherUserInDb = userRepository.findById(anotherUserId)
-                    .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
-
-            UserUpdateRequest updateRequest = new UserUpdateRequest(
-                    anotherUserInDb.getUsername(),
-                    anotherUserInDb.getEmail(),
-                    null,
-                    List.of()
-            );
-
-            performPutRequest(anotherUserId, updateRequest, userJwt)
-                    .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.message").value("You don't have permission to update this user"));
-        }
-
-        @Test
-        @DisplayName("Should return 404 Not Found when updating non-existent user")
-        void shouldReturn404WhenUserNotFound() throws Exception {
-            Long nonExistentId = 99L;
-            UserUpdateRequest updateRequest = new UserUpdateRequest("nonExistent", "nonexistent@test.com", null, null);
-
-            performPutRequest(nonExistentId, updateRequest, adminJwt)
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.message").value("User not found with id " + nonExistentId));
-        }
-
-        @Test
-        @DisplayName("Should return 401 Unauthorized when no JWT is provided")
-        void shouldReturn401WhenNoJwt() throws Exception {
-            UserUpdateRequest updateRequest = new UserUpdateRequest("test", "test@test.com", null, null);
-
-            mockMvc.perform(put("/users/update/{id}", userId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(asJsonString(updateRequest)))
-                    .andExpect(status().isUnauthorized());
-        }
-
-        @Test
-        @DisplayName("Should return 400 Bad Request when validation fails (e.g., blank username)")
-        void shouldReturn400OnValidationFail() throws Exception {
-            UserUpdateRequest updateRequest = new UserUpdateRequest("", "valid@email.com", null, null);
-
-            performPutRequest(userId, updateRequest, userJwt)
-                    .andExpect(status().isBadRequest());
-        }
+        User updatedUser = userRepository.findById(anotherUserId).orElseThrow();
+        assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
+        assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
     }
+
+    @Test
+    @DisplayName("Admin should be able to change another user's roles")
+    void adminCanChangeAnotherUserRoles() throws Exception {
+        User anotherUserInDb = userRepository.findById(anotherUserId)
+                .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
+
+        UserUpdateRequest updateRequest = new UserUpdateRequest(
+                anotherUserInDb.getUsername(),
+                anotherUserInDb.getEmail(),
+                null,
+                List.of("ROLE_USER")
+        );
+
+        performPutRequest(anotherUserId, updateRequest, adminJwt)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.roles.length()").value(1))
+                .andExpect(jsonPath("$.roles[0]").value("ROLE_USER"));
+
+        User updatedUser = userRepository.findById(anotherUserId).orElseThrow();
+        assertThat(updatedUser.getRoles()).hasSize(1);
+        assertThat(updatedUser.getRoles().getFirst().getRoleName()).isEqualTo("ROLE_USER");
+        assertThat(updatedUser.getUsername()).isEqualTo(anotherUserInDb.getUsername());
+        assertThat(updatedUser.getEmail()).isEqualTo(anotherUserInDb.getEmail());
+    }
+
+    @Test
+    @DisplayName("Admin should NOT be able to change another user's password")
+    void adminCannotChangeAnotherUserPassword() throws Exception {
+        String newPassword = "newPassword123.";
+        User anotherUserInDb = userRepository.findById(anotherUserId)
+                .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
+
+        UserUpdateRequest updateRequest = new UserUpdateRequest(
+                anotherUserInDb.getUsername(),
+                anotherUserInDb.getEmail(),
+                newPassword,
+                List.of()
+        );
+
+        performPutRequest(anotherUserId, updateRequest, adminJwt)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Admins are not allowed to change passwords of other users"));
+    }
+
+    @Test
+    @DisplayName("Admin should be able to change their own password")
+    void adminCanChangeOwnPassword() throws Exception {
+        String newPassword = "newAdminPassword123.";
+        User adminUserInDb = userRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Test setup error: adminUser not found"));
+
+        UserUpdateRequest updateRequest = new UserUpdateRequest(
+                adminUserInDb.getUsername(),
+                adminUserInDb.getEmail(),
+                newPassword,
+                List.of()
+        );
+
+        performPutRequest(adminId, updateRequest, adminJwt)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(adminId));
+
+        User updatedUser = userRepository.findById(adminId).orElseThrow();
+        AssertionsForClassTypes.assertThat(passwordEncoder.matches(newPassword, updatedUser.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Normal user should be able to update their own username, email and password")
+    void userCanUpdateOwnProfile() throws Exception {
+        String newUsername = "newUserTest";
+        String newEmail = "newuser@test.com";
+        String newPassword = "newPasswordUser123.";
+        UserUpdateRequest updateRequest = new UserUpdateRequest(newUsername, newEmail, newPassword, List.of());
+
+        performPutRequest(userId, updateRequest, userJwt)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(newUsername))
+                .andExpect(jsonPath("$.email").value(newEmail));
+
+        User updatedUser = userRepository.findById(userId).orElseThrow();
+        assertThat(updatedUser.getUsername()).isEqualTo(newUsername);
+        assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
+        AssertionsForClassTypes.assertThat(passwordEncoder.matches(newPassword, updatedUser.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Normal user should NOT be able to change their own roles")
+    void userCannotChangeOwnRoles() throws Exception {
+        User currentUserInDb = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Test setup error: currentUser not found"));
+
+        UserUpdateRequest updateRequest = new UserUpdateRequest(
+                currentUserInDb.getUsername(),
+                currentUserInDb.getEmail(),
+                null,
+                List.of("ROLE_ADMIN")
+        );
+
+        performPutRequest(userId, updateRequest, userJwt)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Users are not allowed to change their own roles"));
+    }
+
+    @Test
+    @DisplayName("Normal user should NOT be able to update another user's profile")
+    void userCannotUpdateAnotherUserProfile() throws Exception {
+        String newUsername = "shouldNotChange";
+        User anotherUserInDb = userRepository.findById(anotherUserId)
+                .orElseThrow(() -> new RuntimeException("Test setup error: anotherUser not found"));
+
+        UserUpdateRequest updateRequest = new UserUpdateRequest(
+                anotherUserInDb.getUsername(),
+                anotherUserInDb.getEmail(),
+                null,
+                List.of()
+        );
+
+        performPutRequest(anotherUserId, updateRequest, userJwt)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("You don't have permission to update this user"));
+    }
+
+    @Test
+    @DisplayName("Should return 404 Not Found when updating non-existent user")
+    void shouldReturn404WhenUserNotFound() throws Exception {
+        Long nonExistentId = 99L;
+        UserUpdateRequest updateRequest = new UserUpdateRequest("nonExistent", "nonexistent@test.com", null, null);
+
+        performPutRequest(nonExistentId, updateRequest, adminJwt)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("User not found with id " + nonExistentId));
+    }
+
+    @Test
+    @DisplayName("Should return 401 Unauthorized when no JWT is provided")
+    void shouldReturn401WhenNoJwt() throws Exception {
+        UserUpdateRequest updateRequest = new UserUpdateRequest("test", "test@test.com", null, null);
+
+        mockMvc.perform(put("/users/update/{id}", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(updateRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should return 400 Bad Request when validation fails (e.g., blank username)")
+    void shouldReturn400OnValidationFail() throws Exception {
+        UserUpdateRequest updateRequest = new UserUpdateRequest("", "valid@email.com", null, null);
+
+        performPutRequest(userId, updateRequest, userJwt)
+                .andExpect(status().isBadRequest());
+    }
+}
+
+        @Nested
+        @DisplayName("DELETE /users/delete/{id}")
+        class DeleteUserTests {
+
+            @Test
+            @DisplayName("should return OK and success message when admin deletes an existing user")
+            @WithMockUser(username = "May", roles = {"ADMIN"})
+            void shouldDeleteUserSuccessfullyWhenAdmin() throws Exception {
+                Long userIdToDelete = 3L;
+                String expectedMessage = "User with id " + userIdToDelete + " has been deleted";
+
+                User adminUser = new User();
+                adminUser.setId(1L); // May's ID
+                adminUser.setUsername("May");
+                adminUser.setPassword("dummyPassword");
+
+                Role adminRole = new Role(2L, "ROLE_ADMIN", null); // Ensure ID and name match your test-data.sql
+                adminUser.setRoles(List.of(adminRole));
+
+                UserDetail testAdmin = new UserDetail(adminUser);
+
+                mockMvc.perform(delete("/users/delete/{id}", userIdToDelete)
+                                .with(user(testAdmin))
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(expectedMessage));
+            }
+
+            @Test
+            @DisplayName("should return 403 forbidden when normal user tries to delete a user")
+            void shouldReturnForbiddenWhenNormalUserDeletesUser() throws Exception {
+                Long userIdToDelete = 3L; //
+
+                User normalUser = new User();
+                normalUser.setId(2L); // Deb's ID
+                normalUser.setUsername("Deb");
+                normalUser.setPassword("dummyPassword");
+
+                Role userRole = new Role(1L, "ROLE_USER", null); // ID 1 is ROLE_USER in test-data.sql
+                normalUser.setRoles(List.of(userRole));
+
+                UserDetail testNormalUser = new UserDetail(normalUser); // Represents Deb, the normal user
+
+                mockMvc.perform(delete("/users/delete/{id}", userIdToDelete)
+                                .with(user(testNormalUser)) // Simulate normal user
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isForbidden()) // Expect 403 Forbidden
+                        .andExpect(jsonPath("$.message").value("Only administrators can delete users")); // Verify message
+            }
+
+            @Test
+            @DisplayName("should return 404 not found when admin tries to delete a non-existent user")
+            void shouldReturnNotFoundWhenAdminDeletesNonExistentUser() throws Exception {
+                Long nonExistentUserId = 999L;
+
+                User adminUser = new User();
+                adminUser.setId(1L); // May's ID
+                adminUser.setUsername("May");
+                adminUser.setPassword("dummyPassword");
+
+                Role adminRole = new Role(2L, "ROLE_ADMIN", null);
+                adminUser.setRoles(List.of(adminRole));
+
+                UserDetail testAdmin = new UserDetail(adminUser);
+
+                mockMvc.perform(delete("/users/delete/{id}", nonExistentUserId)
+                                .with(user(testAdmin)) // Simulate admin user
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isNotFound()) // Expect 404 Not Found
+                        .andExpect(jsonPath("$.message").value("User not found with id " + nonExistentUserId));
+            }
+        }
+
+
+
 }
