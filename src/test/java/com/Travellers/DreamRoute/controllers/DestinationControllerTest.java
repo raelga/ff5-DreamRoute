@@ -489,7 +489,6 @@ public class DestinationControllerTest {
             userDetailUserMary = new UserDetail(userMaryEntity);
         }
 
-
         @Test
         @DisplayName("Should delete destination successfully when authenticated as owner (200 OK)")
         void deleteDestination_byOwner_returnsOk() throws Exception {
