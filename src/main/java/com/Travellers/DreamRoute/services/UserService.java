@@ -1,7 +1,5 @@
 package com.Travellers.DreamRoute.services;
 
-import com.Travellers.DreamRoute.dtos.destination.DestinationMapperImpl;
-import com.Travellers.DreamRoute.dtos.destination.DestinationResponse;
 import com.Travellers.DreamRoute.dtos.user.UserMapperImpl;
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
@@ -10,16 +8,13 @@ import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.Destination;
 import com.Travellers.DreamRoute.models.Role;
 import com.Travellers.DreamRoute.models.User;
-import com.Travellers.DreamRoute.repositories.DestinationRepository;
 import com.Travellers.DreamRoute.repositories.RoleRepository;
 import com.Travellers.DreamRoute.repositories.UserRepository;
 import com.Travellers.DreamRoute.security.UserDetail;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.*;
