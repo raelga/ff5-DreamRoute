@@ -23,10 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -78,74 +75,67 @@ public class UserService implements UserDetailsService {
     }
 
     public UserResponse updateUser(Long id, UserUpdateRequest userRequest, UserDetail userDetail){
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), id));
+
         boolean isAdmin = userDetail.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        boolean isOwner = userDetail.getId().equals(id);
-        boolean isUsernameUpdated = userRequest.username() != null && !userRequest.username().isBlank();
-        boolean isEmailUpdated = userRequest.email() != null && !userRequest.email().isBlank();
-        boolean isPasswordUpdated = isOwner && userRequest.password() != null && !userRequest.password().isBlank();
+        boolean isOwner = Objects.equals(userDetail.getId(), id);
 
         if (!isAdmin && !isOwner){
             throw new AccessDeniedException("You don't have permission to update this user");
         }
-        User user = userRepository.findById(id)
-                .orElseThrow(()-> new EntityNotFoundException(User.class.getSimpleName(), id));
 
-        if (isAdmin) {
-            if (isUsernameUpdated) {
+        if (userRequest.username() != null && !userRequest.username().isBlank()) {
+            if (!userRequest.username().equals(user.getUsername())) {
+                if (userRepository.findByUsernameIgnoreCase(userRequest.username()).isPresent()) {
+                    throw new IllegalArgumentException("Username already taken");
+                }
                 user.setUsername(userRequest.username());
             }
-            if (isEmailUpdated) {
+        }
+
+        if (userRequest.email() != null && !userRequest.email().isBlank()) {
+            if (!userRequest.email().equals(user.getEmail())) {
+                if (userRepository.findByEmailIgnoreCase(userRequest.email()).isPresent()) {
+                    throw new IllegalArgumentException("Email is already registered");
+                }
                 user.setEmail(userRequest.email());
             }
-            if (userRequest.roles() != null && !userRequest.roles().isEmpty()) {
-                List<Role> updatedRoles = userRequest.roles().stream()
-                        .map(roleName -> {
-                            Optional<Role> roleOptional = roleRepository.findByRoleNameIgnoreCase(roleName);
-                            if (roleOptional.isEmpty()) {
-                                throw new RuntimeException("Role not found: " + roleName);
-                            }
-                            return roleOptional.get();
-                        })
-                        .collect(Collectors.toCollection(ArrayList::new));
-                user.setRoles(updatedRoles);
-            }
-            if (userRequest.password() != null && !userRequest.password().isBlank() && !isOwner) {
+        }
+
+        if (userRequest.password() != null && !userRequest.password().isBlank()) {
+            if (isAdmin && !isOwner) {
                 throw new AccessDeniedException("Admins are not allowed to change passwords of other users");
             }
-            if (isPasswordUpdated) {
-                user.setPassword(passwordEncoder.encode(userRequest.password()));
-            }
+            user.setPassword(passwordEncoder.encode(userRequest.password()));
         }
 
-        if (isOwner && userRequest.roles() != null && !userRequest.roles().isEmpty()) {
-            throw new AccessDeniedException("Users are not allowed to change their own roles");
-        }
+        if (userRequest.roles() != null && !userRequest.roles().isEmpty()) {
+            if (!isAdmin) {
+                throw new AccessDeniedException("Users are not allowed to change their own roles");
+            }
 
-        if (isOwner) {
-            if (isUsernameUpdated) {
-                user.setUsername(userRequest.username());
-            }
-            if (isEmailUpdated) {
-                user.setEmail(userRequest.email());
-            }
-            if (isPasswordUpdated) {
-                user.setPassword(passwordEncoder.encode(userRequest.password()));
-            }
+            List<Role> updatedRoles = userRequest.roles().stream()
+                    .map(roleName -> roleRepository.findByRoleNameIgnoreCase(roleName)
+                            .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            user.setRoles(updatedRoles);
         }
 
         User savedUser = userRepository.save(user);
         return userMapperImpl.entityToDto(savedUser);
     }
 
+
     public String deleteUser(Long id, UserDetail userDetail) {
         boolean isAdmin = userDetail.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-        if (!isAdmin && !userDetail.getId().equals(id)){
-            throw new AccessDeniedException("You don't have permission to delete a user");
+        if (!isAdmin){
+            throw new AccessDeniedException("Only administrators can delete users");
         }
         User userToDelete = userRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), id));
+                .orElseThrow(() -> new EntityNotFoundException(User.class.getSimpleName(), id));
         userRepository.delete(userToDelete);
         return "User with id " + id + " has been deleted";
     }
@@ -174,10 +164,9 @@ public class UserService implements UserDetailsService {
         roles.add(defaultRole);
         User user = userMapperImpl.dtoToEntity(request, new ArrayList<>(), roles);
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.password()));
 
         userRepository.save(user);
         return userMapperImpl.entityToDto(user);
     }
-
 }
