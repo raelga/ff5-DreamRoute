@@ -219,14 +219,14 @@ public class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /users/{username}")
+    @DisplayName("GET /users/username/{username}")
     class GetUserByUsernameTests {
 
         @Test
         @DisplayName("should return 200 OK and UserResponse for existing username")
         void shouldGetUserByUsernameSuccessfully() throws Exception {
 
-            performGetRequest("/users/{username}", ADMIN_USERNAME)
+            performGetRequest("/users/username/{username}", ADMIN_USERNAME)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.id").value(adminId))
@@ -242,7 +242,7 @@ public class UserControllerTest {
         void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
             String usernameDoesNotExist = "nonexistentuser";
 
-            performGetRequest("/users/{username}", usernameDoesNotExist)
+            performGetRequest("/users/username/{username}", usernameDoesNotExist)
                     .andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.message").value("User not found with username " + usernameDoesNotExist));
@@ -251,7 +251,7 @@ public class UserControllerTest {
         @Test
         @DisplayName("should return 401 Unauthorized if not authenticated")
         void getByUsername_returnsUnauthorizedWhenNotAuthenticated() throws Exception {
-            mockMvc.perform(get("/users/{username}", ADMIN_USERNAME)
+            mockMvc.perform(get("/users/username/{username}", ADMIN_USERNAME)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isUnauthorized());
         }
