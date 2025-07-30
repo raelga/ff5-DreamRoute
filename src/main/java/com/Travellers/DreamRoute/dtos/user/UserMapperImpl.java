@@ -4,7 +4,6 @@ import com.Travellers.DreamRoute.models.Destination;
 import com.Travellers.DreamRoute.models.Role;
 import com.Travellers.DreamRoute.models.User;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 

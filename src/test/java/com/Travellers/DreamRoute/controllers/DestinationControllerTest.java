@@ -16,9 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
 import java.util.Collections;
-
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -55,13 +53,6 @@ public class DestinationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(asJsonString(body))
                 .with(user(userDetail))
-                .accept(MediaType.APPLICATION_JSON));
-    }
-
-    private ResultActions performPostRequestUnauthenticated(String url, Object body) throws Exception {
-        return mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(body))
                 .accept(MediaType.APPLICATION_JSON));
     }
 

@@ -20,15 +20,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.access.AccessDeniedException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +32,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.StatusResultMatchersExtensionsKt.isEqualTo;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService Unit Tests")
@@ -134,8 +129,6 @@ public class UserServiceTest {
        normalUserDetail = new UserDetail(normalUser);
    }
 
-
-
     @Nested
     @DisplayName("GET User by Username")
     class GetUserByUsername {
@@ -164,7 +157,6 @@ public class UserServiceTest {
             });
             assertThat(exception.getMessage()).contains("User not found with username testuserdoesnotexist");
         }
-
     }
 
     @Nested
@@ -255,7 +247,6 @@ public class UserServiceTest {
             });
 
             assertThat(thrown.getMessage()).contains("User not found with id " + nonExistentUserId);
-
         }
     }
 
@@ -387,7 +378,6 @@ public class UserServiceTest {
             verify(userRepository, never()).save(org.mockito.ArgumentMatchers.any(User.class));
         }
 
-
         @Test
         @DisplayName("should throw AccessDeniedException if not admin and not owner")
         void updateUser_throwsAccessDeniedException_ifNotAdminAndNotOwner() {
@@ -432,7 +422,6 @@ public class UserServiceTest {
                         Collections.emptyList();
                 return new UserResponse(userEntity.getId(), userEntity.getUsername(), userEntity.getEmail(), Collections.emptyList(), roleNames);
             });
-
 
             UserResponse result = userService.updateUser(targetUserId, userRequest, adminUserDetail);
 
@@ -751,7 +740,6 @@ public class UserServiceTest {
                         Collections.emptyList();
                 return new UserResponse(userEntity.getId(), userEntity.getUsername(), userEntity.getEmail(), Collections.emptyList(), roleNames);
             });
-
 
             UserResponse result = userService.updateUser(targetUserId, userRequest, normalUserDetail);
 

@@ -22,7 +22,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,7 +125,6 @@ public class UserService implements UserDetailsService {
         User savedUser = userRepository.save(user);
         return userMapperImpl.entityToDto(savedUser);
     }
-
 
     public String deleteUser(Long id, UserDetail userDetail) {
         boolean isAdmin = userDetail.getAuthorities().stream()

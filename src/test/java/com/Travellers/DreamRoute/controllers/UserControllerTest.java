@@ -2,9 +2,7 @@ package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.user.JwtResponse;
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
-import com.Travellers.DreamRoute.dtos.user.UserResponse;
 import com.Travellers.DreamRoute.dtos.user.UserUpdateRequest;
-import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
 import com.Travellers.DreamRoute.models.Role;
 import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.repositories.RoleRepository;
@@ -21,19 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.http.MediaType;
-
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.hasSize;
@@ -136,7 +128,6 @@ public class UserControllerTest {
                 .build();
 
         user.setRoles(List.of(role));
-
     }
 
     private String performLogin(String username, String email, String password) throws Exception {
@@ -215,7 +206,6 @@ public class UserControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isForbidden());
         }
-
     }
 
     @Nested
@@ -515,5 +505,4 @@ public class UserControllerTest {
                     .andExpect(jsonPath("$.message").value("User not found with id " + nonExistentUserId));
         }
     }
-
 }

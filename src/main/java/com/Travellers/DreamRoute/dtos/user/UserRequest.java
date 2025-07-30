@@ -5,8 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
-
 public record UserRequest(
         @NotBlank (message = "Username is required")
         @Size(max = 20, message = "Username must be less than 20 characters")

@@ -7,13 +7,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import com.Travellers.DreamRoute.exceptions.EntityNotFoundException;
-import com.Travellers.DreamRoute.exceptions.ErrorResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

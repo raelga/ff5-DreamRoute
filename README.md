@@ -56,7 +56,6 @@ Welcome to the backend API for Happy Travel, a web app designed to let users sha
 ## 🛠️Tools
 - IntelliJ IDEA
 - Postman
-- Cloudinary
 
 ## 🗃️ Architecture
 The backend is built with a 3-layer architecture, promoting separation of concerns and maintainability:
@@ -113,9 +112,9 @@ npm run dev
 ## ➡️ Endpoints
 
 ### DESTINATIONS
-- POST `/destinations/{destinatuibId}` → To update a destination by DestinationID
+- POST `/destinations/{Id}` → To update a destination by DestinationID
 - GET `/destinations` → To list all destinations
-- GET `/destinations/{destinationId}` → To show a destination by ID 
+- GET `/destinations/{Id}` → To show a destination by ID 
 ```json
  {
         "id": 1,
@@ -127,20 +126,20 @@ npm run dev
     }
  ```
 - GET `/destinations/{userId}` → To show a list of destinations by User ID
-- PUT `/destinations/{destinationID}` → To update a destination
-- DEL `/destinations/{destinationID}` → To delete a destination by ID 
+- PUT `/destinations/{Id}` → To update a destination
+- DEL `/destinations/{Id}` → To delete a destination by ID 
 
 ### USERS
 - POST `/users/create` → To add a new user
 - GET `/users/all` → To list all users
-- GET `/users/id/{userId}` → To show a user by ID
-- GET `/users/{username}` → To show a user by username
-- PUT `/users/update/{userID}` → To update a user by ID
-- DEL `/users/delete/{userID}` → To delete a user by ID
+- GET `/users/id/{Id}` → To show a user by ID
+- GET `/users/username/{username}` → To show a user by username
+- PUT `/users/update/{Id}` → To update a user by ID
+- DEL `/users/delete/{Id}` → To delete a user by ID
 
 ### ROLES
 - GET `/roles` → To list all roles
-- GET `/roles/{roleId}` → To show a role by ID
+- GET `/roles/{Id}` → To show a role by ID
 
 ### SECURITY
 - POST `/login` → To login
