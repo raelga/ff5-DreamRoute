@@ -4,7 +4,7 @@ import com.Travellers.DreamRoute.models.Destination;
 import com.Travellers.DreamRoute.models.Role;
 import com.Travellers.DreamRoute.models.User;
 import org.springframework.stereotype.Component;
-
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -15,8 +15,8 @@ public class UserMapperImpl implements UserMapper {
                 .username(dto.username())
                 .email(dto.email())
                 .password(dto.password())
-                .destinations(destinations)
-                .roles(roles)
+                .destinations(new ArrayList<>(destinations))
+                .roles(new ArrayList<>(roles))
                 .build();
     }
 

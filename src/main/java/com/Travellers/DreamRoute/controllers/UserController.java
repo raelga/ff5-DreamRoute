@@ -2,6 +2,7 @@ package com.Travellers.DreamRoute.controllers;
 
 import com.Travellers.DreamRoute.dtos.user.UserRequest;
 import com.Travellers.DreamRoute.dtos.user.UserResponse;
+import com.Travellers.DreamRoute.dtos.user.UserUpdateRequest;
 import com.Travellers.DreamRoute.models.User;
 import com.Travellers.DreamRoute.security.UserDetail;
 import com.Travellers.DreamRoute.services.UserService;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -27,7 +27,7 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/username/{username}")
     public ResponseEntity<UserResponse>getUserByUsername(@PathVariable String username) {
         UserResponse user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
@@ -47,12 +47,13 @@ public class UserController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest userRequest, @AuthenticationPrincipal UserDetail userDetail) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userRequest, @AuthenticationPrincipal UserDetail userDetail) {
         UserResponse user = userService.updateUser(id, userRequest, userDetail);
         return ResponseEntity.ok(user);
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable Long id, @AuthenticationPrincipal UserDetail userDetail) {
         String message = userService.deleteUser(id, userDetail);
         return new ResponseEntity<>(message, HttpStatus.OK);

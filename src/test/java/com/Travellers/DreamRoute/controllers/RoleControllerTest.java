@@ -18,10 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
 import java.util.List;
 import java.util.Optional;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -50,7 +48,7 @@ public class RoleControllerTest {
 
     @BeforeEach
     void setUp() throws Exception{
-    Role adminRole = roleRepository.findByRoleName("ROLE_ADMIN")
+    Role adminRole = roleRepository.findByRoleNameIgnoreCase("ROLE_ADMIN")
             .orElseGet(() -> roleRepository.save(new Role(null, "ROLE_ADMIN", null)));
 
         String ADMIN_USERNAME = "testAdminUser";
@@ -123,10 +121,10 @@ public class RoleControllerTest {
         }
 
         @Test
-        @DisplayName("Without authentication should return a 403")
-        void shouldReturn403WhenNotAuthenticated() throws Exception {
+        @DisplayName("Without authentication should return a 401 Unauthorized")
+        void shouldReturn401WhenNotAuthenticated() throws Exception {
             mockMvc.perform(get("/roles"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 }

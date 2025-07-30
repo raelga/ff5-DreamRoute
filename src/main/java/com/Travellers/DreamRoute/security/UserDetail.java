@@ -7,7 +7,6 @@ import org.springframework.security.core.GrantedAuthority;
 import com.Travellers.DreamRoute.models.User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -34,5 +33,4 @@ public class UserDetail implements UserDetails {
     }
 
     public Long getId() {return user.getId();}
-
 }

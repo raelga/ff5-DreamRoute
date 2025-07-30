@@ -7,7 +7,6 @@ import com.Travellers.DreamRoute.models.Role;
 import com.Travellers.DreamRoute.repositories.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
