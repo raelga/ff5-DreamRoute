@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.result.StatusResultMatchersExtensionsKt.isEqualTo;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService Unit Tests")
@@ -50,14 +52,20 @@ public class UserServiceTest {
    User testUser, testUser2;
    UserResponse testUserResponse, testUserResponse2;
 
+   Role userRole;
+   Role adminRole;
+
    @BeforeEach
     void setUp(){
+       userRole = new Role(100L, "ROLE_USER", null);
+       adminRole = new Role(101L, "ROLE_ADMIN", null);
+
        testUser = User.builder()
                .id(1L)
                .username("testuser")
                .email("test@dreamroute.com")
                .password("testDeamRoute1!")
-               .roles(List.of())
+               .roles(List.of(userRole))
                .build();
 
        testUser2 = User.builder()
@@ -65,7 +73,7 @@ public class UserServiceTest {
                .username("testuser2")
                .email("test2@dreamroute.com")
                .password("testDreamRoute2!")
-               .roles(List.of())
+               .roles(List.of(adminRole))
                .build();
 
        testUserResponse = new UserResponse(
@@ -82,8 +90,6 @@ public class UserServiceTest {
                "test2@dreamroute.com",
                List.of(),
                List.of("ROLE_ADMIN")
-
-
        );
    }
 
@@ -149,16 +155,45 @@ public class UserServiceTest {
     @DisplayName("Delete User")
     class DeleteUser {
         @Test
-        @DisplayName("should delete user by user ID successfully")
-        void shouldDeleteUserByUserIdSuccessfully() {
+        @DisplayName("should delete user by user ID successfully when user is admin")
+        void shouldDeleteUserByUserIdSuccessfullyWhenUserIsAdmin() {
             Long userIdToDelete = testUser.getId();
-            UserDetail userDetailTest = new UserDetail(testUser);
+            UserDetail userDetailTest = new UserDetail(testUser2);
 
             given(userRepository.findById(userIdToDelete)).willReturn(Optional.of(testUser));
 
             String result = userService.deleteUser(userIdToDelete, userDetailTest);
 
             assertThat(result).isEqualTo("User with id " + userIdToDelete + " has been deleted");
+        }
+
+        @Test
+        @DisplayName("should throw AccessDeniedException when non-admin user tries to delete a user")
+        void shouldNotAllowDeleteUserByUserIdWhenUserIsNotAdmin() {
+            Long userIdToDelete = testUser2.getId();
+            UserDetail userDetailTest = new UserDetail(testUser);
+
+            AccessDeniedException thrown = assertThrows(AccessDeniedException.class, () -> {
+                userService.deleteUser(userIdToDelete, userDetailTest);
+            });
+
+            assertThat(thrown.getMessage()).contains("Only administrators can delete users");
+        }
+
+        @Test
+        @DisplayName("should throw EntityNotFoundException when admin attempts to delete non-existent user")
+        void shouldThrowEntityNotFoundExceptionWhenAdminTriesToDeleteNonExistentUser() {
+            Long nonExistentUserId = 99L;
+            UserDetail adminUserDetail = new UserDetail(testUser2);
+
+            given(userRepository.findById(nonExistentUserId)).willReturn(Optional.empty());
+
+            EntityNotFoundException thrown = assertThrows(EntityNotFoundException.class, () -> {
+                userService.deleteUser(nonExistentUserId, adminUserDetail);
+            });
+
+            assertThat(thrown.getMessage()).contains("User not found with id " + nonExistentUserId);
+
         }
     }
 
