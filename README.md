@@ -81,7 +81,7 @@ git clone https://github.com/Femcoders-Travellers/DreamRoute.git
 Create a .env file in the project root with your database credentials:
 ```shell
 DB_URL=jdbc:mysql://localhost:3306/dreamroute
-DB_USER=your_mysql_user
+DB_USERNAME=your_mysql_user
 DB_PASSWORD=your_mysql_password
 ```
 **Note:
