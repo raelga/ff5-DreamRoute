@@ -121,4 +121,13 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>test</id>
+			<build>
+				<directory>/tmp/build</directory>
+			</build>
+		</profile>
+	</profiles>
+
 </project>
