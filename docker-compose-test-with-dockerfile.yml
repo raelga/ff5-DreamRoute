@@ -1,0 +1,87 @@
+# Docker Compose configuration for DreamRoute testing with custom Dockerfile
+# This configuration builds and runs tests using a custom test-specific Dockerfile
+# which allows for more control over the test environment and dependencies
+
+services:
+  # Test service using custom Dockerfile
+  dreamroute-test:
+    # Build configuration for custom test image
+    build:
+      context: . # Build context is current directory
+      dockerfile: Dockerfile-test # Use custom test Dockerfile
+
+    # Custom container name for easier identification
+    container_name: dreamroute-test
+
+    # Environment variables passed to the SpringBoot application
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker # Activates Docker-specific configuration profile
+      - SERVER_PORT=8080 # Sets the server port inside container
+      - DB_URL=jdbc:mysql://dreamroute-test-db:3306/dreamroute # Database connection URL using service name
+      - DB_USERNAME=dreamroute # Database username
+      - DB_PASSWORD=dreamroute123 # Database password
+
+    # Restart policy - never restart (single-run test container)
+    restart: no
+
+    # Service dependencies - ensures database is healthy before starting app
+    depends_on:
+      dreamroute-test-db:
+        condition: service_healthy # Wait for DB health check to pass
+
+    # Health check configuration for the SpringBoot application
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"] # Health check command
+      interval: 30s # Check every 30 seconds
+      timeout: 10s # Timeout after 10 seconds
+      retries: 3 # Retry 3 times before marking as unhealthy
+      start_period: 60s # Wait 60 seconds before starting health checks
+
+    # Connect to custom network
+    networks:
+      - dreamroute-network
+
+  # MySQL database service for testing
+  dreamroute-test-db:
+    # Use official MySQL 8.0 image from Docker Hub
+    image: mysql:8.0
+
+    # Custom container name for easier identification
+    container_name: dreamroute-test-db
+
+    # MySQL environment variables for database initialization
+    environment:
+      MYSQL_DATABASE: dreamroute # Creates database named 'dreamroute'
+      MYSQL_USER: dreamroute # Creates user 'dreamroute'
+      MYSQL_PASSWORD: dreamroute123 # Sets password for 'dreamroute' user
+      MYSQL_ROOT_PASSWORD: root123 # Sets root user password
+
+    # Restart policy - never restart (single-run test container)
+    # No external port mapping - database only accessible from within the network
+    restart: no
+
+    # Health check configuration for MySQL database
+    healthcheck:
+      test: [
+          "CMD",
+          "mysqladmin", # MySQL admin utility
+          "ping", # Ping command to check if MySQL is responding
+          "-h",
+          "localhost", # Connect to localhost
+          "-u",
+          "dreamroute", # Use dreamroute user for health check
+          "-pdreamroute123", # Password for dreamroute user
+        ]
+      interval: 10s # Check every 10 seconds
+      timeout: 5s # Timeout after 5 seconds
+      retries: 5 # Retry 5 times before marking as unhealthy
+      start_period: 30s # Wait 30 seconds before starting health checks
+
+    # Connect to custom network
+    networks:
+      - dreamroute-network
+
+# Network configuration
+networks:
+  dreamroute-network:
+    driver: bridge # Use bridge driver for container-to-container communication
