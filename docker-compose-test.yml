@@ -20,7 +20,7 @@ services:
 
     # Run Maven test command with test profile
     # Using -Ptest profile to avoid building JAR files (allows read-only source mounting)
-    entrypoint: ["mvn", "-Ptest", "clean", "verify"]
+    entrypoint: ["mvn", "-Ptest", "clean", "verify", "--no-transfer-progress"]
 
     # Custom container name for easier identification
     container_name: dreamroute-test
