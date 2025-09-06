@@ -1,0 +1,22 @@
+name: Test with Docker
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run tests with docker-compose
+        run: docker compose -f docker-compose-test.yml up --abort-on-container-exit --exit-code-from dreamroute-test
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f docker-compose-test.yml down -v
