@@ -5,25 +5,22 @@ kind: Deployment
 metadata:
   name: app
   labels:
-    app: dreamroute
-    tier: backend
+    tier: frontend
 spec:
-  # Run 3 replicas for high availability
-  replicas: 3
+  # Run 4 replicas for high availability
+  replicas: 4
   selector:
     matchLabels:
-      app: dreamroute
-      tier: backend
+      tier: frontend
   template:
     metadata:
       labels:
-        app: dreamroute
-        tier: backend
+        tier: frontend
     spec:
       containers:
-      - name: dreamroute
+      - name: app
         # Application container image
-        image: dreamroute:latest
+        image: raelga/ff5-dreamroute:tag
         ports:
         - containerPort: 8080
           name: http
