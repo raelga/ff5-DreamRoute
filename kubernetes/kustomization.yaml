@@ -1,0 +1,35 @@
+# Kustomization configuration for DreamRoute application
+# This file defines how to customize and deploy the DreamRoute Kubernetes resources
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: dreamroute
+
+# List of Kubernetes resource files to include in this deployment
+resources:
+- deployment.yaml
+- service.yaml
+- configmap.yaml
+
+# Image customization - override image tags
+images:
+- name: dreamroute
+  newTag: latest
+
+# Add prefix to all resource names to avoid conflicts
+namePrefix: dreamroute-
+
+# Add common labels to all resources
+labels:
+- pairs:
+    app: dreamroute
+    version: v1
+
+# Target namespace for deployment
+namespace: default
+
+# Override replica count for specific deployments
+replicas:
+- name: app
+  count: 3

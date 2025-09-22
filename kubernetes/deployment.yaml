@@ -1,0 +1,87 @@
+# DreamRoute Application Deployment
+# This deployment manages the main application pods for the DreamRoute service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: dreamroute
+    tier: backend
+spec:
+  # Run 3 replicas for high availability
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dreamroute
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: dreamroute
+        tier: backend
+    spec:
+      containers:
+      - name: dreamroute
+        # Application container image
+        image: dreamroute:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        # Spring Boot profile configuration
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        # Application server port
+        - name: SERVER_PORT
+          value: "8080"
+        # Database connection URL from ConfigMap
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: db-url
+        # Database credentials from Secret
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-credentials
+              key: password
+        # SQL logging configuration from ConfigMap
+        - name: SHOW_SQL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: show-sql
+        # Resource limits and requests for proper scheduling
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        # Health check to determine if container is running properly
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        # Health check to determine if container is ready to receive traffic
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      # Always restart containers on failure
+      restartPolicy: Always
