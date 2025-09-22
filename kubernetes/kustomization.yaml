@@ -26,10 +26,7 @@ labels:
     app: dreamroute
     version: v1
 
-# Target namespace for deployment
-namespace: default
-
 # Override replica count for specific deployments
 replicas:
 - name: app
-  count: 5
+  count: 2

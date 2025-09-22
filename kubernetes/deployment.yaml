@@ -11,7 +11,7 @@ spec:
   replicas: 4
   selector:
     matchLabels:
-      tier: frontend
+        tier: frontend
   template:
     metadata:
       labels:
@@ -41,12 +41,12 @@ spec:
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: mysql-credentials
+              name: database-credentials
               key: username
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-credentials
+              name: database-credentials
               key: password
         # SQL logging configuration from ConfigMap
         - name: SHOW_SQL
@@ -57,7 +57,7 @@ spec:
         # Resource limits and requests for proper scheduling
         resources:
           requests:
-            memory: "512Mi"
+            memory: "256Mi"
             cpu: "250m"
           limits:
             memory: "1Gi"
@@ -80,5 +80,3 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-      # Always restart containers on failure
-      restartPolicy: Always

@@ -5,17 +5,16 @@ kind: Service
 metadata:
   name: service
   labels:
-    app: dreamroute
-    tier: backend
+    tier: frontend
   annotations:
-    # AWS Load Balancer SSL certificate configuration
-    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:region:account:certificate/cert-id"
-    # Configure backend protocol as HTTP (SSL terminates at load balancer)
-    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
-    # Specify which ports should use SSL
-    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+    # AWS Load Balancer scheme configuration
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    # AWS Load Balancer type configuration
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
     # Cert-manager configuration for automatic certificate management
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # External DNS configuration for automatic DNS management
+    external-dns.alpha.kubernetes.io/hostname: dreamroute.ff5.rael.io
 spec:
   # Use LoadBalancer to expose service externally
   type: LoadBalancer
@@ -32,5 +31,4 @@ spec:
     name: https
   # Select pods with these labels
   selector:
-    app: dreamroute
-    tier: backend
+    tier: frontend
