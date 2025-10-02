@@ -15,7 +15,7 @@ resources:
 # Image customization - override image tags
 images:
 - name: raelga/ff5-dreamroute
-  newTag: main
+  newTag: v0.0.2
 
 # Add prefix to all resource names to avoid conflicts
 namePrefix: dreamroute-
